@@ -1,4 +1,7 @@
 mysql-connector-python
 Flask
+python-dotenv
+regex
+requests
 
--e .
+# -e .
