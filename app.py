@@ -91,7 +91,32 @@ def get_greeting():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"status": "error", "message": "Internal Server Error"}), 500
+    
 
+# this API is responsible for choosing client type
+@app.route("/chatbot/client", methods=["POST"])
+def client():
+    try:
+        data = request.get_json()
+        client_type = data.get("client_type")
+        welcome_messages = {
+            "1": "Welcome, New client!",
+            "2": "Welcome, existing client!",
+            "3": "Welcome, Job seeker!",
+            "4": "Bye!",
+        }
+        if client_type not in welcome_messages:
+            message = "Invalid option. Please choose a valid option."
+            status_code = 400
+        else:
+            message = welcome_messages[client_type]
+            status_code = 200
+
+        logging.info(f"Client type found: {message}")
+        return jsonify({"message": message, "code": status_code})
+    except Exception as e:
+        logging.error(f"Error in processing request: {e}")
+        return jsonify({"message": "Internal server error.", "status": "error"}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
