@@ -254,6 +254,38 @@ def verticals_new_client():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error"}), 500
+    
+
+# this API is responsible for selecting requirements
+@app.route("/chatbot/new_client/user_details/industries/verticals/requirement",methods=["POST"])
+def requirement():
+    try:
+        requirements = {
+            "1": "Start the project from scratch",
+            "2": "Require support from existing project",
+            "3": "Looking for some kind of solutions",
+            "4": "Others",
+        }
+
+        data = request.get_json()
+        selected_option = data.get("selected_option")
+        row_id = data.get("row_id")  # Get the user ID from the request
+
+        if selected_option in requirements:
+            selected_requirement = requirements[selected_option]
+
+            query = "UPDATE new_client SET REQUIREMENTS = %s WHERE ID = %s"
+            values = (selected_requirement, row_id)
+            cursor.execute(query, values)
+            mydb.commit()
+            logging.info("new client requirement saved in DB - {selected_requirement}")
+            return jsonify({"selected_requirement": selected_requirement, "code": 200})
+        else:
+            return jsonify({"message": "Please choose a valid option.", "code": 400})
+    except Exception as e:
+        logging.error(f"Error in processing request: {e}")
+        return jsonify({"message": "Internal server error.", "status": "error"}), 500
+
 
 
 
