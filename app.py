@@ -2,6 +2,8 @@ import os
 from flask import Flask, jsonify, request
 import re
 import requests
+from src.alert import send_email
+from src.database import extract_new_client_details
 from datetime import datetime, timezone
 import mysql.connector as conn
 from src.logger import logging
@@ -218,7 +220,7 @@ def industries():
         values = (industry_str, row_id)
         cursor.execute(query, values)
         mydb.commit()
-        logging.info("new client industry saved in DB - {industry_str}")
+        logging.info(f"new client industry saved in DB - {industry_str}")
         return jsonify({"selected_industries": selected_industries, "code": 200})
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
@@ -249,7 +251,7 @@ def verticals_new_client():
         values = (vertical_str, row_id)
         cursor.execute(query, values)
         mydb.commit()
-        logging.info("new client vertical saved in DB - {vertical_str}")
+        logging.info(f"new client vertical saved in DB - {vertical_str}")
         return jsonify({"selected_verticals": selected_verticals, "code": 200})
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
@@ -278,13 +280,80 @@ def requirement():
             values = (selected_requirement, row_id)
             cursor.execute(query, values)
             mydb.commit()
-            logging.info("new client requirement saved in DB - {selected_requirement}")
+            logging.info(f"new client requirement saved in DB - {selected_requirement}")
             return jsonify({"selected_requirement": selected_requirement, "code": 200})
         else:
             return jsonify({"message": "Please choose a valid option.", "code": 400})
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error"}), 500
+    
+
+# this API is responsible for selecting known sources
+@app.route("/chatbot/new_client/user_details/industries/verticals/requirement/known_source",methods=["POST"])
+def known_source():
+    try:
+        known_sources = {
+            "1": "Google",
+            "2": "LinkedIn",
+            "3": "Email Campaign",
+            "4": "News Letter",
+            "5": "Known resources",
+            "6": "Others",
+        }
+
+        data = request.get_json()
+        selected_option = data.get("selected_option")
+        row_id = data.get("row_id")  # Get the user ID from the request
+
+        if selected_option in known_sources:
+            if selected_option in ["5", "6"]:
+                source_specification = request.get_json().get("source_specification")
+                selected_known_source = (known_sources[selected_option] + " : " + source_specification)
+            else:
+                selected_known_source = known_sources[selected_option]
+
+            query = "UPDATE new_client SET KNOWN_SOURCE = %s WHERE ID = %s"
+            values = (selected_known_source, row_id)
+            cursor.execute(query, values)
+            mydb.commit()
+            logging.info(f"new client known source saved in DB - {selected_known_source}")
+            # extract new client details
+            new_client_details = extract_new_client_details()
+            logging.info("new client details extracted")
+            ## Send email with the new client details
+            if new_client_details:
+                sender_email = os.getenv("sender_email")
+                receiver_emails = os.getenv("receiver_emails").split(",")  # Convert comma-separated string to a list
+                cc_email = os.getenv("cc_email")
+                subject = "Datanetiix chatbot project Email alert testing demo"
+                email_message = (
+                    f"Hi, new user logged in our chatbot, Find the below details for your reference:\n\n"
+                    f"New client details:\n\n"
+                    f"Date: {new_client_details['date']}\n"
+                    f"Time: {new_client_details['time']}\n"
+                    f"IP: {new_client_details['ip_address']}\n"
+                    f"Name: {new_client_details['name']}\n"
+                    f"Email: {new_client_details['email']}\n"
+                    f"Contact: {new_client_details['contact']}\n"
+                    f"Company: {new_client_details['company']}\n"
+                    f"Industries: {new_client_details['industries_choosen']}\n"
+                    f"Verticals: {new_client_details['verticals_choosen']}\n"
+                    f"Requirements: {new_client_details['requirement']}\n"
+                    f"Known Source: {new_client_details['known_source']}"
+                )
+                send_email(sender_email,receiver_emails, cc_email, subject, email_message)
+                #logging.info("mail sent successfully")
+            # Close the cursor and connection
+            cursor.close()
+            mydb.close()
+            logging.info("mail sent successfully")
+            return jsonify({"selected_known_source": selected_known_source, "code": 200})
+        else:
+            return jsonify({"message": "Please choose a valid option.", "code": 400})
+    except Exception as e:
+        return jsonify({"message": "Internal server error.", "error": str(e), "code": 500})
+
 
 
 
