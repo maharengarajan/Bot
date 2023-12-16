@@ -114,10 +114,63 @@ def extract_new_client_details():
     except Exception as e:
         logging.error(f"An error occurred: {e}")
         raise CustomException(e,sys)
-
     
 
-    
+def extract_existing_client_details():
+    try:
 
+        # connection to mysql database
+        mydb = conn.connect(host=host,user=user_name,password=password,database=database)
+
+        # create cursor object to execute SQL queries
+        cursor = mydb.cursor()
+
+        # execute sql query to retrive new_client details
+        query = "SELECT * FROM existing_client ORDER BY id DESC LIMIT 1"  # we can get the row with highest id value
+        cursor.execute(query)
+
+        # Fetch the result
+        result = cursor.fetchone()  # getting only one row
+
+        if result:
+            # Extract the columns from the result
+            (
+                id,
+                date,
+                time,
+                ip_address,
+                name,
+                email,
+                contact,
+                company,
+                selected_vertical,
+                issue_escalation,
+                issue_type,
+            ) = result
+
+            # Extracted new_client details stored in dictionary format
+            existing_client_details = {
+                "id": id,
+                "date": date,
+                "time": time,
+                "ip_address":ip_address,
+                "name": name,
+                "email": email,
+                "contact": contact,
+                "company": company,
+                "verticals_choosen": selected_vertical,
+                "issue_escalation": issue_escalation,
+                "issue_type": issue_type,
+            }
+
+            return existing_client_details
+        
+        # Close the cursor and connection
+        cursor.close()
+        mydb.close()
+
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+        raise CustomException(e,sys)
 
     
