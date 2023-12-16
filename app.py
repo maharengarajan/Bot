@@ -4,6 +4,7 @@ import re
 import requests
 from src.alert import send_email
 from src.database import extract_new_client_details
+from src.database import extract_existing_client_details
 from datetime import datetime, timezone
 import mysql.connector as conn
 from src.logger import logging
@@ -352,7 +353,191 @@ def known_source():
         else:
             return jsonify({"message": "Please choose a valid option.", "code": 400})
     except Exception as e:
-        return jsonify({"message": "Internal server error.", "error": str(e), "code": 500})
+        logging.error(f"Error in processing request: {e}")
+        return jsonify({"message": "Internal server error.", "status": "error"}), 500
+    
+
+# this API responsible for collecting user details
+@app.route("/chatbot/existing_client_details", methods=["POST"])
+def existing_client_details():
+    try:
+        ip_address = get_ip_address()
+        data = request.get_json()
+        name = data.get("name")
+        email = data.get("email")
+        contact = data.get("contact")
+        company = data.get("company")
+
+        if not is_valid_name(name):
+            return jsonify({"message": "Please enter a valid name.", "code": 400})
+
+        if not is_valid_email(email):
+            return jsonify({"message": "Please enter a valid email address.", "code": 400})
+
+        if not is_valid_contact_number(contact):
+            return jsonify({"message": "Please enter a valid contact number.", "code": 400})
+
+        user_details = {"ip_address":ip_address, "name": name, "email": email, "contact": contact, "company": company}
+
+        query = "INSERT INTO existing_client (DATE, TIME, IP_ADDRESS, NAME, EMAIL_ID, CONTACT_NUMBER, COMPANY_NAME) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        values = (utc_date, utc_time, ip_address, name, email, contact, company)
+        cursor.execute(query, values)
+        row_id = cursor.lastrowid  # Get the ID (primary key) of the inserted row
+        mydb.commit()  # Commit the changes to the database
+        logging.info("existing client user details save in DB")
+        return jsonify(
+            {
+                "message": "User details collected successfully.",
+                "row_id": row_id,
+                "code": 200,
+            }
+        )
+    except Exception as e:
+        logging.error(f"Error in processing request: {e}")
+        return jsonify({"message": "Internal server error.", "status": "error"}), 500
+
+
+def is_valid_name(name):
+    return bool(re.match(r"^[A-Za-z\s]+$", name.strip()))
+
+
+def is_valid_email(email):
+    return bool(re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email))
+
+
+def is_valid_contact_number(contact):
+    return bool(re.match(r"^\+?\d{1,3}[-.\s]?\(?\d{1,3}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}$",contact))
+
+
+
+# this API is responsible for selecting verticals for existing client and save in DB
+@app.route("/chatbot/existing_client_details/verticals", methods=["POST"])
+def verticals_exixting_client():
+    try:
+        verticals = {
+            "1": "ML/DS/AI",
+            "2": "Sales force",
+            "3": "Microsoft dynamics",
+            "4": "Custom app",
+            "5": "Others",
+        }
+
+        data = request.get_json()
+        row_id = data.get("row_id")
+
+        selected_options = data.get("selected_options", [])
+        selected_verticals = [
+            verticals[opt] for opt in selected_options if opt in verticals
+        ]
+
+        vertical_str = ",".join(selected_verticals)
+
+        query = "UPDATE existing_client SET VERTICAL = %s WHERE ID = %s"
+        values = (vertical_str, row_id)
+        cursor.execute(query, values)
+        mydb.commit()
+        logging.info(f"existing client vertical selected - {vertical_str}")
+        return jsonify({"selected_verticals": selected_verticals, "code": 200})
+    except Exception as e:
+        logging.error(f"Error in processing request: {e}")
+        return jsonify({"message": "Internal server error.", "status": "error"}), 500
+    
+
+# this API is responsible for selecting issue_escalation for existing client and save in DB
+@app.route("/chatbot/existing_client_details/verticals/issue_escalation", methods=["POST"])
+def issue_escalation():
+    try:
+        issue_escalation_options = {
+            "1": "Team Lead",
+            "2": "Sales Person",
+            "3": "Escalate Issue",
+        }
+
+        data = request.get_json()
+        row_id = data.get("row_id")
+
+        selected_option = data.get("selected_option")
+        if selected_option in issue_escalation_options:
+            selected_issue_escalation = issue_escalation_options[selected_option]
+
+            query = "UPDATE existing_client SET ISSUE_ESCALATION = %s WHERE ID = %s"
+            values = (selected_issue_escalation, row_id)
+            cursor.execute(query, values)
+            mydb.commit()
+            logging.info(f"issue escalation selected - {selected_issue_escalation}")
+            return jsonify(
+                {"selected_isse_type": selected_issue_escalation, "code": 200}
+            )
+        else:
+            return jsonify({"message": "Please choose a valid option.", "code": 400})
+    except Exception as e:
+        logging.error(f"Error in processing request: {e}")
+        return jsonify({"message": "Internal server error.", "status": "error"}), 500
+    
+
+# this API is responsible for selecting issue_type for existing client and save in DB
+@app.route("/chatbot/existing_client_details/verticals/issue_escalation/issue_type",methods=["POST"])
+def issue_type():
+    try:
+        issue_type_options = {"1": "Normal", "2": "Urgent"}
+
+        data = request.get_json()
+        row_id = data.get("row_id")
+
+        user_response = data.get("user_response")
+        if user_response in issue_type_options:
+            selected_issue_type = issue_type_options[user_response]
+
+            if selected_issue_type == "Normal":
+                response_message = "Thank you. We have saved your issue and will contact you as soon as possible."
+            elif selected_issue_type == "Urgent":
+                response_message = "Thank you. We have saved your issue as urgent and will contact you immediately."
+
+            query = "UPDATE existing_client SET ISSUE_TYPE = %s WHERE ID = %s"
+            values = (selected_issue_type, row_id)
+            logging.info(f"issue type saved - {selected_issue_type}")
+            cursor.execute(query, values)
+            mydb.commit()
+
+            # Extract the new client details from the database
+            existing_client_details = extract_existing_client_details()
+
+            # Send email with the existing client details
+            if existing_client_details:
+                sender_email = os.getenv("sender_email")
+                receiver_emails = os.getenv("receiver_emails").split(",")  # Convert comma-separated string to a list
+                cc_email = os.getenv("cc_email")
+                subject = "Datanetiix chatbot project Email alert testing demo"
+                email_message = (
+                    f"Hi, one of our client logged in our chatbot, Find the below details for your reference:\n\n"
+                    f"Existing client details:\n\n"
+                    f"Date: {existing_client_details['date']}\n"
+                    f"Time: {existing_client_details['time']}\n"
+                    f"IP: {existing_client_details['ip_address']}\n"
+                    f"Name: {existing_client_details['name']}\n"
+                    f"Email: {existing_client_details['email']}\n"
+                    f"Contact: {existing_client_details['contact']}\n"
+                    f"Company: {existing_client_details['company']}\n"
+                    f"Verticals: {existing_client_details['verticals_choosen']}\n"
+                    f"Escalating issue to: {existing_client_details['issue_escalation']}\n"
+                    f"Type of issue: {existing_client_details['issue_type']}"
+                )
+                send_email(
+                    sender_email, receiver_emails, cc_email, subject, email_message
+                )
+
+            return jsonify(
+                {
+                    "user_response": selected_issue_type,
+                    "message": response_message,
+                    "code": 200,
+                }
+            )
+        else:
+            return jsonify({"message": "Please choose a valid option.", "code": 400})
+    except Exception as e:
+        logging.error(f"Error in processing request: {e}")
+        return jsonify({"message": "Internal server error.", "status": "error"}), 500
 
 
 
