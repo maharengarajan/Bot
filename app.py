@@ -190,5 +190,41 @@ def is_valid_contact_number(contact):
     return bool(re.match(r"^\+?\d{1,3}[-.\s]?\(?\d{1,3}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}$",contact,))
 
 
+# this API is responsible for selecting industries
+@app.route("/chatbot/new_client/user_details/industries", methods=["POST"])
+def industries():
+    try:
+        industries = {
+            "1": "Insurance",
+            "2": "Banking",
+            "3": "Finance",
+            "4": "IT",
+            "5": "Healthcare",
+            "6": "Internet",
+            "7": "Automobile",
+            "8": "Others",
+        }
+        data = request.get_json()
+        row_id = data.get("row_id")  # Get the user ID from the request
+
+        selected_options = data.get("selected_options", [])
+        selected_industries = [
+            industries[opt] for opt in selected_options if opt in industries
+        ]
+
+        industry_str = ",".join(selected_industries)  # Convert lists to strings
+
+        query = "UPDATE new_client SET INDUSTRY = %s WHERE ID = %s"
+        values = (industry_str, row_id)
+        cursor.execute(query, values)
+        mydb.commit()
+        logging.info("new client industry saved in DB - {industry_str}")
+        return jsonify({"selected_industries": selected_industries, "code": 200})
+    except Exception as e:
+        logging.error(f"Error in processing request: {e}")
+        return jsonify({"message": "Internal server error.", "status": "error"}), 500
+
+
+
 if __name__ == "__main__":
     app.run(debug=True)
