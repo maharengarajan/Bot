@@ -347,8 +347,8 @@ def known_source():
                 send_email(sender_email,receiver_emails, cc_email, subject, email_message)
                 #logging.info("mail sent successfully")
             # Close the cursor and connection
-            cursor.close()
-            mydb.close()
+            # cursor.close()
+            # mydb.close()
             logging.info("mail sent successfully")
             return jsonify({"selected_known_source": selected_known_source, "code": 200})
         else:

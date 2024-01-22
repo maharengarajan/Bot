@@ -235,5 +235,6 @@ def extract_job_seeker_details():
 
     
 
-
+# to create database
+create_database()
     
