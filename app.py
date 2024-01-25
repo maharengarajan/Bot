@@ -10,9 +10,12 @@ from datetime import datetime, timezone
 import mysql.connector as conn
 from src.logger import logging
 from dotenv import load_dotenv
+from flask_cors import CORS
 
 
 app = Flask(__name__)
+app.config['CORS_HEADERS'] = 'Content-Type'
+CORS(app)
 
 
 def configure():

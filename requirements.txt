@@ -1,5 +1,6 @@
 mysql-connector-python
 Flask
+Flask-Cors
 python-dotenv
 regex
 requests
