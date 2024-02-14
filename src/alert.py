@@ -18,10 +18,11 @@ receiver_emails = os.getenv("receiver_emails").split(',')
 cc_email = os.getenv("cc_email")
 
 
-def send_email(sender_email, receiver_emails, cc_email, subject, message):
+def send_email(sender_email, receiver_emails, cc_email, subject, message, from_name="Chatbot_Datanetiix"):
     # Create a multipart message container
     msg = MIMEMultipart()
-    msg["From"] = sender_email
+    #msg["From"] = sender_email
+    msg["From"] = f"{from_name} <{sender_email}>"
     msg["To"] = ", ".join(receiver_emails)
     msg["Cc"] = cc_email
     msg["Subject"] = subject

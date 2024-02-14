@@ -11,6 +11,8 @@ import mysql.connector as conn
 from src.logger import logging
 from dotenv import load_dotenv
 from flask_cors import CORS
+from src.exception import CustomException
+import sys
 
 
 app = Flask(__name__)
@@ -38,6 +40,19 @@ current_utc_datetime = datetime.now(timezone.utc)
 # Extract date and time separately
 utc_date = current_utc_datetime.strftime('%Y-%m-%d')
 utc_time = current_utc_datetime.strftime('%H:%M:%S')
+print(utc_date, utc_time)
+
+
+# Function to ping the MySQL server
+def ping_mysql_server():
+    try:
+        global mydb
+        if(mydb.is_connected() == 0):
+            # connection to mysql database
+            mydb = conn.connect(host=host,user=user_name,password=password,database=database)        
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+        raise CustomException(e,sys)
 
 
 def get_ip_address():
@@ -149,6 +164,7 @@ def client():
 @app.route("/chatbot/new_client_details", methods=["POST"])
 def new_client_details():
     try:
+        ping_mysql_server()
         ip_address = get_ip_address()
         data = request.get_json()
         name = data.get("name")
@@ -169,6 +185,7 @@ def new_client_details():
 
         query = "INSERT INTO new_client (DATE, TIME, IP_ADDRESS, NAME, EMAIL_ID, CONTACT_NUMBER, COMPANY_NAME) VALUES (%s, %s, %s, %s, %s, %s, %s)"
         values = (utc_date, utc_time, ip_address, name, email, contact, company, )
+        cursor = mydb.cursor()
         cursor.execute(query, values)
         row_id = cursor.lastrowid  # Get the ID (primary key) of the inserted row
         mydb.commit()  # Commit the changes to the database
@@ -214,22 +231,30 @@ def industries():
         data = request.get_json()
         row_id = data.get("row_id")  # Get the user ID from the request
 
-        selected_options = data.get("selected_options", [])
-        selected_industries = [
-            industries[opt] for opt in selected_options if opt in industries
-        ]
+        user_input = data.get("selected_options", [])
+        user_selected_industries = []
+        
+        for opt in user_input:
+            if opt in industries:
+                if opt == '8':
+                    source_specification = data.get("source_specification")
+                    user_selected_industries.append(industries[opt] + " : " + source_specification)
+                else:
+                    user_selected_industries.append(industries[opt])
 
-        industry_str = ",".join(selected_industries)  # Convert lists to strings
+        industry_str = ",".join(user_selected_industries)  # Convert lists to strings
 
+        ping_mysql_server()
         query = "UPDATE new_client SET INDUSTRY = %s WHERE ID = %s"
         values = (industry_str, row_id)
         cursor.execute(query, values)
         mydb.commit()
         logging.info(f"new client industry saved in DB - {industry_str}")
-        return jsonify({"selected_industries": selected_industries, "code": 200})
+        return jsonify({"selected_industries": user_selected_industries, "code": 200})
+    
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
-        return jsonify({"message": "Internal server error.", "status": "error"}), 500
+        return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
     
 
 # this API is responsible for selecting verticals
@@ -247,20 +272,29 @@ def verticals_new_client():
         data = request.get_json()
         row_id = data.get("row_id")  # Get the user ID from the request
 
-        selected_options = data.get("selected_options", [])
-        selected_verticals = [verticals[opt] for opt in selected_options if opt in verticals]
+        user_input = data.get("selected_options", [])
+        user_selected_verticals = []
+        
+        for opt in user_input:
+            if opt in verticals:
+                if opt == '5':
+                    source_specification = data.get("source_specification")
+                    user_selected_verticals.append(verticals[opt] + " : " + source_specification)
+                else:
+                    user_selected_verticals.append(verticals[opt])
 
-        vertical_str = ",".join(selected_verticals)
+        vertical_str = ",".join(user_selected_verticals)
 
+        ping_mysql_server()
         query = "UPDATE new_client SET VERTICAL = %s WHERE ID = %s"
         values = (vertical_str, row_id)
         cursor.execute(query, values)
         mydb.commit()
         logging.info(f"new client vertical saved in DB - {vertical_str}")
-        return jsonify({"selected_verticals": selected_verticals, "code": 200})
+        return jsonify({"selected_verticals": user_selected_verticals, "code": 200})
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
-        return jsonify({"message": "Internal server error.", "status": "error"}), 500
+        return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
     
 
 # this API is responsible for selecting requirements
@@ -275,12 +309,18 @@ def requirement():
         }
 
         data = request.get_json()
-        selected_option = data.get("selected_option")
+        user_selected_option = data.get("selected_option")
         row_id = data.get("row_id")  # Get the user ID from the request
+        
 
-        if selected_option in requirements:
-            selected_requirement = requirements[selected_option]
+        if user_selected_option in requirements:
+            if user_selected_option == '4':
+                requirement_specification = data.get("requirement_specification")
+                selected_requirement = requirements[user_selected_option] + " : " + requirement_specification
+            else:
+                selected_requirement = requirements[user_selected_option]
 
+            ping_mysql_server()
             query = "UPDATE new_client SET REQUIREMENTS = %s WHERE ID = %s"
             values = (selected_requirement, row_id)
             cursor.execute(query, values)
@@ -291,7 +331,7 @@ def requirement():
             return jsonify({"message": "Please choose a valid option.", "code": 400})
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
-        return jsonify({"message": "Internal server error.", "status": "error"}), 500
+        return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
     
 
 # this API is responsible for selecting known sources
@@ -318,6 +358,7 @@ def known_source():
             else:
                 selected_known_source = known_sources[selected_option]
 
+            ping_mysql_server()
             query = "UPDATE new_client SET KNOWN_SOURCE = %s WHERE ID = %s"
             values = (selected_known_source, row_id)
             cursor.execute(query, values)
@@ -358,7 +399,7 @@ def known_source():
             return jsonify({"message": "Please choose a valid option.", "code": 400})
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
-        return jsonify({"message": "Internal server error.", "status": "error"}), 500
+        return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
     
 
 # this API responsible for collecting user details
@@ -383,6 +424,7 @@ def existing_client_details():
 
         user_details = {"ip_address":ip_address, "name": name, "email": email, "contact": contact, "company": company}
 
+        ping_mysql_server()
         query = "INSERT INTO existing_client (DATE, TIME, IP_ADDRESS, NAME, EMAIL_ID, CONTACT_NUMBER, COMPANY_NAME) VALUES (%s, %s, %s, %s, %s, %s, %s)"
         values = (utc_date, utc_time, ip_address, name, email, contact, company)
         cursor.execute(query, values)
@@ -427,24 +469,31 @@ def verticals_exixting_client():
         }
 
         data = request.get_json()
-        row_id = data.get("row_id")
+        row_id = data.get("row_id")  # Get the user ID from the request
 
-        selected_options = data.get("selected_options", [])
-        selected_verticals = [
-            verticals[opt] for opt in selected_options if opt in verticals
-        ]
+        user_input = data.get("selected_options", [])
+        user_selected_verticals = []
+        
+        for opt in user_input:
+            if opt in verticals:
+                if opt == '5':
+                    source_specification = data.get("source_specification")
+                    user_selected_verticals.append(verticals[opt] + " : " + source_specification)
+                else:
+                    user_selected_verticals.append(verticals[opt])
 
-        vertical_str = ",".join(selected_verticals)
+        vertical_str = ",".join(user_selected_verticals)
 
-        query = "UPDATE existing_client SET VERTICAL = %s WHERE ID = %s"
+        ping_mysql_server()
+        query = "UPDATE new_client SET VERTICAL = %s WHERE ID = %s"
         values = (vertical_str, row_id)
         cursor.execute(query, values)
         mydb.commit()
-        logging.info(f"existing client vertical selected - {vertical_str}")
-        return jsonify({"selected_verticals": selected_verticals, "code": 200})
+        logging.info(f"new client vertical saved in DB - {vertical_str}")
+        return jsonify({"selected_verticals": user_selected_verticals, "code": 200})
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
-        return jsonify({"message": "Internal server error.", "status": "error"}), 500
+        return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
     
 
 # this API is responsible for selecting issue_escalation for existing client and save in DB
@@ -464,6 +513,7 @@ def issue_escalation():
         if selected_option in issue_escalation_options:
             selected_issue_escalation = issue_escalation_options[selected_option]
 
+            ping_mysql_server()
             query = "UPDATE existing_client SET ISSUE_ESCALATION = %s WHERE ID = %s"
             values = (selected_issue_escalation, row_id)
             cursor.execute(query, values)
@@ -476,7 +526,7 @@ def issue_escalation():
             return jsonify({"message": "Please choose a valid option.", "code": 400})
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
-        return jsonify({"message": "Internal server error.", "status": "error"}), 500
+        return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
     
 
 # this API is responsible for selecting issue_type for existing client and save in DB
@@ -497,6 +547,7 @@ def issue_type():
             elif selected_issue_type == "Urgent":
                 response_message = "Thank you. We have saved your issue as urgent and will contact you immediately."
 
+            ping_mysql_server()
             query = "UPDATE existing_client SET ISSUE_TYPE = %s WHERE ID = %s"
             values = (selected_issue_type, row_id)
             logging.info(f"issue type saved - {selected_issue_type}")
@@ -539,7 +590,7 @@ def issue_type():
             return jsonify({"message": "Please choose a valid option.", "code": 400})
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
-        return jsonify({"message": "Internal server error.", "status": "error"}), 500
+        return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
     
 
 # this API responsible for collecting user details from job seeker and save in DB
@@ -563,6 +614,7 @@ def job_seeker_details():
 
         user_details = {"ip_address":ip_address, "name": name, "email": email, "contact": contact}
 
+        ping_mysql_server()
         query = "INSERT INTO job_seeker (DATE, TIME, IP_ADDRESS, NAME, EMAIL_ID, CONTACT_NUMBER) VALUES (%s, %s, %s, %s, %s, %s)"
         values = (utc_date, utc_time, ip_address, name, email, contact)
         cursor.execute(query, values)
@@ -597,7 +649,7 @@ def is_valid_contact_number(contact):
 @app.route("/chatbot/job_seeker_details/category", methods=["POST"])
 def category():
     try:
-        category_type = {"1": "fresher", "2": "experienced"}
+        category_type = {"1": "Fresher", "2": "Experienced", "3": "External consultant"}
 
         data = request.get_json()
         row_id = data.get("row_id")
@@ -606,6 +658,7 @@ def category():
         if user_type in category_type:
             selected_category_type = category_type[user_type]
 
+            ping_mysql_server()
             query = "UPDATE job_seeker SET category = %s WHERE ID = %s"
             values = (selected_category_type, row_id)
             cursor.execute(query, values)
@@ -616,7 +669,7 @@ def category():
             return jsonify({"message": "Please choose a valid option.", "code": 400})
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
-        return jsonify({"message": "Internal server error.", "status": "error"}), 500
+        return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
     
 
 # this API is responsible for selecting verticals for job seeker and save in DB
@@ -632,24 +685,31 @@ def verticals_job_seeker():
         }
 
         data = request.get_json()
-        row_id = data.get("row_id")
+        row_id = data.get("row_id")  # Get the user ID from the request
 
-        selected_options = data.get("selected_options", [])
-        selected_verticals = [
-            verticals[opt] for opt in selected_options if opt in verticals
-        ]
+        user_input = data.get("selected_options", [])
+        user_selected_verticals = []
+        
+        for opt in user_input:
+            if opt in verticals:
+                if opt == '5':
+                    source_specification = data.get("source_specification")
+                    user_selected_verticals.append(verticals[opt] + " : " + source_specification)
+                else:
+                    user_selected_verticals.append(verticals[opt])
 
-        vertical_str = ",".join(selected_verticals)
+        vertical_str = ",".join(user_selected_verticals)
 
-        query = "UPDATE job_seeker SET VERTICAL = %s WHERE ID = %s"
+        ping_mysql_server()
+        query = "UPDATE new_client SET VERTICAL = %s WHERE ID = %s"
         values = (vertical_str, row_id)
         cursor.execute(query, values)
         mydb.commit()
-        logging.info(f"job seeker vertical saved - {selected_verticals}")
-        return jsonify({"selected_verticals": selected_verticals, "code": 200})
+        logging.info(f"new client vertical saved in DB - {vertical_str}")
+        return jsonify({"selected_verticals": user_selected_verticals, "code": 200})
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
-        return jsonify({"message": "Internal server error.", "status": "error"}), 500
+        return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
     
 
 # this API responsible for checking user availability for an interview
@@ -665,6 +725,7 @@ def interview_available_check():
         if user_response in interview_avail_options:
             selected_interview_avail = interview_avail_options[user_response]
 
+            ping_mysql_server()
             query = "UPDATE job_seeker SET INTERVIEW_AVAILABLE = %s WHERE ID = %s"
             values = (selected_interview_avail, row_id)
             cursor.execute(query, values)
@@ -681,7 +742,7 @@ def interview_available_check():
             return jsonify({"message": "Please choose a valid option.", "code": 400})
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
-        return jsonify({"message": "Internal server error.", "status": "error"}), 500
+        return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
     
 
 # this API responsible for checking date for an interview
@@ -693,6 +754,7 @@ def date_of_interview():
         row_id = data.get("row_id")
         interview_date = data.get("interview_date")
 
+        ping_mysql_server()
         query = "UPDATE job_seeker SET TIME_AVAILABLE = %s WHERE ID = %s"
         values = (interview_date, row_id)
         cursor.execute(query, values)
@@ -703,14 +765,14 @@ def date_of_interview():
         )
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
-        return jsonify({"message": "Internal server error.", "status": "error"}), 500
+        return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
     
 
 # this API responsible for checking notice period
 @app.route("/chatbot/job_seeker_details/category/verticals/interview_avail/date_of_interview/notice_period",methods=["POST"])
 def notice_period():
     try:
-        notice_period_options = {"1": "30 days", "2": "60 days", "3": "90 days"}
+        notice_period_options = {"1": "Below 30 days", "2": "30 days", "3": "60 days", "4": "90 days"}
         data = request.get_json()
         row_id = data.get("row_id")
 
@@ -718,6 +780,7 @@ def notice_period():
         if joining_date in notice_period_options:
             selected_notice_period_options = notice_period_options[joining_date]
 
+            ping_mysql_server()
             query = "UPDATE job_seeker SET NOTICE_PERIOD = %s WHERE ID = %s"
             values = (selected_notice_period_options, row_id)
             cursor.execute(query, values)
@@ -760,7 +823,7 @@ def notice_period():
             return jsonify({"error": "Invalid input. Please select a valid option.", "code": 400})
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
-        return jsonify({"message": "Internal server error.", "status": "error"}), 500
+        return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
 
 
 if __name__ == "__main__":
