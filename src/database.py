@@ -233,23 +233,5 @@ def extract_job_seeker_details():
         raise CustomException(e,sys)
     
 
-# # Function to ping the MySQL server
-# def ping_mysql_server():
-#     try:
-#         global mydb
-#         print(mydb.is_connected())
-#         # if(mydb.is_connected() == 0):
-#         #     #global mydb
-#         #     # connection to mysql database
-#         #     mydb = conn.connect(host=host,user=user_name,password=password,database=database)
-            
-#     except Exception as e:
-#         logging.error(f"An error occurred: {e}")
-#         raise CustomException(e,sys)
-    
 
-    
-
-# to create database
-#create_database()
     
