@@ -119,10 +119,10 @@ def create_tables(host, user, password, database):
 
 def extract_new_client_details():
     try:
-        mydb = conn.connect(host=host,user=user_name,password=password,database=database)
-        cursor = mydb.cursor()
+        mydb = connect_to_mysql_database(host, user, password, database)
+        cursor = create_cursor_object(mydb)
         # execute sql query to retrive new_client details
-        query = "SELECT * FROM new_client ORDER BY id DESC LIMIT 1"  # we can get the row with highest id value
+        query = "SELECT * FROM chatbot.new_client ORDER BY id DESC LIMIT 1"  # we can get the row with highest id value
         cursor.execute(query)
         # Fetch the result
         result = cursor.fetchone()  # getting only one row
@@ -141,6 +141,7 @@ def extract_new_client_details():
                 selected_vertical,
                 requirement,
                 known_source,
+                rating,
             ) = result
 
             # Extracted new_client details stored in dictionary format
@@ -157,6 +158,7 @@ def extract_new_client_details():
                 "verticals_choosen": selected_vertical,
                 "requirement": requirement,
                 "known_source": known_source,
+                "rating": rating
             }
 
             return new_client_details
@@ -171,20 +173,13 @@ def extract_new_client_details():
 
 def extract_existing_client_details():
     try:
-
-        # connection to mysql database
-        mydb = conn.connect(host=host,user=user_name,password=password,database=database)
-
-        # create cursor object to execute SQL queries
-        cursor = mydb.cursor()
-
+        mydb = connect_to_mysql_database(host, user, password, database)
+        cursor = create_cursor_object(mydb)
         # execute sql query to retrive new_client details
-        query = "SELECT * FROM existing_client ORDER BY id DESC LIMIT 1"  # we can get the row with highest id value
+        query = "SELECT * FROM chatbot.existing_client ORDER BY id DESC LIMIT 1"  # we can get the row with highest id value
         cursor.execute(query)
-
         # Fetch the result
         result = cursor.fetchone()  # getting only one row
-
         if result:
             # Extract the columns from the result
             (
@@ -199,6 +194,7 @@ def extract_existing_client_details():
                 selected_vertical,
                 issue_escalation,
                 issue_type,
+                rating
             ) = result
 
             # Extracted new_client details stored in dictionary format
@@ -214,6 +210,7 @@ def extract_existing_client_details():
                 "verticals_choosen": selected_vertical,
                 "issue_escalation": issue_escalation,
                 "issue_type": issue_type,
+                "rating": rating,
             }
 
             return existing_client_details
@@ -221,7 +218,6 @@ def extract_existing_client_details():
         # Close the cursor and connection
         cursor.close()
         mydb.close()
-
     except Exception as e:
         logging.error(f"An error occurred: {e}")
         raise CustomException(e,sys)
@@ -229,20 +225,13 @@ def extract_existing_client_details():
 
 def extract_job_seeker_details():
     try:
-
-        # connection to mysql database
-        mydb = conn.connect(host=host,user=user_name,password=password,database=database)
-
-        # create cursor object to execute SQL queries
-        cursor = mydb.cursor()
-
+        mydb = connect_to_mysql_database(host, user, password, database)
+        cursor = create_cursor_object(mydb)
         # execute sql query to retrive new_client details
-        query = "SELECT * FROM job_seeker ORDER BY id DESC LIMIT 1"  # we can get the row with highest id value
+        query = "SELECT * FROM chatbot.job_seeker ORDER BY id DESC LIMIT 1"  # we can get the row with highest id value
         cursor.execute(query)
-
         # Fetch the result
         result = cursor.fetchone()  # getting only one row
-
         if result:
             # Extract the columns from the result
             (
@@ -258,6 +247,7 @@ def extract_job_seeker_details():
                 interview_available,
                 time_available,
                 notice_period,
+                rating,
             ) = result
 
             # Extracted job_seeker details stored in dictionary format
@@ -274,6 +264,7 @@ def extract_job_seeker_details():
                 "interview_available": interview_available,
                 "time_available": time_available,
                 "notice_period": notice_period,
+                "rating": rating,
             }
 
             return job_seeker_details
@@ -287,5 +278,5 @@ def extract_job_seeker_details():
     
 
 
-create_database(host, user, password)
-create_tables(host, user, password,database)
+# create_database(host, user, password)
+# create_tables(host, user, password,database)
