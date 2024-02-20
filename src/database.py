@@ -1,5 +1,4 @@
 import mysql.connector as conn
-import datetime
 import sys
 import os
 from dotenv import load_dotenv
@@ -116,7 +115,6 @@ def create_tables(host, user, password, database):
         raise CustomException(e, sys)
 
 
-
 def extract_new_client_details():
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
@@ -165,7 +163,10 @@ def extract_new_client_details():
         
         # Close the cursor and connection
         cursor.close()
+        logging.info("cursor connection closed")
         mydb.close()
+        logging.info("database closed")
+
     except Exception as e:
         logging.error(f"An error occurred: {e}")
         raise CustomException(e,sys)
@@ -217,7 +218,10 @@ def extract_existing_client_details():
         
         # Close the cursor and connection
         cursor.close()
+        logging.info("cursor connection closed")
         mydb.close()
+        logging.info("database closed")
+
     except Exception as e:
         logging.error(f"An error occurred: {e}")
         raise CustomException(e,sys)
@@ -268,9 +272,12 @@ def extract_job_seeker_details():
             }
 
             return job_seeker_details
+        
         # Close the cursor and connection
         cursor.close()
+        logging.info("cursor connection closed")
         mydb.close()
+        logging.info("database closed")
 
     except Exception as e:
         logging.error(f"An error occurred: {e}")
@@ -278,5 +285,6 @@ def extract_job_seeker_details():
     
 
 
+# to create DB and tables execute below command in terminal
 # create_database(host, user, password)
 # create_tables(host, user, password,database)
