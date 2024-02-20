@@ -13,66 +13,119 @@ def configure():
 
 configure()
 host = os.getenv("database_host_name")
-user_name = os.getenv("database_user_name")
+user = os.getenv("database_user_name")
 password = os.getenv("database_user_password")
 database = os.getenv("database_name")
 
 
-def create_database():
+def create_database(host, user, password):
     try:
-
-        configure()
-
-        host = os.getenv("database_host_name")
-        user_name = os.getenv("database_user_name")
-        password = os.getenv("database_user_password")
-
-        # Connection from Python to MySQL
-        mydb = conn.connect(host=host,user=user_name,password=password)
-
-        # Creating a pointer to the MySQL database
+        mydb = conn.connect(host=host, user=user, password=password)
         cursor = mydb.cursor()
+        cursor.execute("CREATE DATABASE IF NOT EXISTS chatbot")
+        logging.info("Database created successfully")
+    except Exception as e:
+        logging.error(f"An error occurred while creating database: {e}")
+        raise CustomException(e, sys)
+    
 
-        # Create database if it doesn't exist
-        cursor.execute("CREATE DATABASE IF NOT EXISTS Bot")
-
-        logging.info("database created successfully")
-
-        # Create tables and columns if they don't exist
-        cursor.execute(
-            "CREATE TABLE IF NOT EXISTS Bot.new_client(ID INT AUTO_INCREMENT PRIMARY KEY, DATE DATE, TIME TIME, IP_ADDRESS VARCHAR(45), NAME VARCHAR(255), EMAIL_ID VARCHAR(255), CONTACT_NUMBER VARCHAR(255), COMPANY_NAME VARCHAR(500), INDUSTRY VARCHAR(255), VERTICAL VARCHAR(255), REQUIREMENTS VARCHAR(255), KNOWN_SOURCE VARCHAR(255))"
-        )
-        cursor.execute(
-            "CREATE TABLE IF NOT EXISTS Bot.existing_client(ID INT AUTO_INCREMENT PRIMARY KEY, DATE DATE, TIME TIME, IP_ADDRESS VARCHAR(45), NAME VARCHAR(255), EMAIL_ID VARCHAR(255), CONTACT_NUMBER VARCHAR(255), COMPANY_NAME VARCHAR(500), VERTICAL VARCHAR(255), ISSUE_ESCALATION VARCHAR(255), ISSUE_TYPE VARCHAR(255))"
-        )
-        cursor.execute(
-            "CREATE TABLE IF NOT EXISTS Bot.job_seeker(ID INT AUTO_INCREMENT PRIMARY KEY, DATE DATE, TIME TIME, IP_ADDRESS VARCHAR(45), NAME VARCHAR(255), EMAIL_ID VARCHAR(255), CONTACT_NUMBER VARCHAR(255), CATEGORY VARCHAR(255), VERTICAL VARCHAR(255), INTERVIEW_AVAILABLE VARCHAR(255), TIME_AVAILABLE VARCHAR(255), NOTICE_PERIOD VARCHAR(255))"
-        )
-        logging.info("Tables and columns created ")
-
-        cursor.close()
-        mydb.close()
+def connect_to_mysql_database(host, user, password, database):
+    try:
+        mydb = conn.connect(host=host, user=user, password=password, database=database)
+        logging.info("Connected to MySQL successfully!")
+        return mydb
     except Exception as e:
         logging.error(f"An error occurred: {e}")
         raise CustomException(e,sys)
     
 
+def create_cursor_object(mydb):
+    try:
+        cursor = mydb.cursor()
+        logging.info("Cursor object obtained successfully!")
+        return cursor
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+        raise CustomException(e,sys)
+    
+
+def create_tables(host, user, password, database):
+    try:
+        mydb = connect_to_mysql_database(host, user, password, database)
+        cursor = create_cursor_object(mydb)
+        table_queries = [
+            """
+            CREATE TABLE IF NOT EXISTS chatbot.new_client(
+                ID INT AUTO_INCREMENT PRIMARY KEY,
+                DATE DATE,
+                TIME TIME,
+                IP_ADDRESS VARCHAR(45),
+                NAME VARCHAR(255),
+                EMAIL_ID VARCHAR(255),
+                CONTACT_NUMBER VARCHAR(255),
+                COMPANY_NAME VARCHAR(500),
+                INDUSTRY VARCHAR(255),
+                VERTICAL VARCHAR(255),
+                REQUIREMENTS VARCHAR(255),
+                KNOWN_SOURCE VARCHAR(255),
+                RATING VARCHAR(255)
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS chatbot.existing_client(
+                ID INT AUTO_INCREMENT PRIMARY KEY,
+                DATE DATE,
+                TIME TIME,
+                IP_ADDRESS VARCHAR(45),
+                NAME VARCHAR(255),
+                EMAIL_ID VARCHAR(255),
+                CONTACT_NUMBER VARCHAR(255),
+                COMPANY_NAME VARCHAR(500),
+                VERTICAL VARCHAR(255),
+                ISSUE_ESCALATION VARCHAR(255),
+                ISSUE_TYPE VARCHAR(255),
+                RATING VARCHAR(255)
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS chatbot.job_seeker(
+                ID INT AUTO_INCREMENT PRIMARY KEY,
+                DATE DATE,
+                TIME TIME,
+                IP_ADDRESS VARCHAR(45),
+                NAME VARCHAR(255),
+                EMAIL_ID VARCHAR(255),
+                CONTACT_NUMBER VARCHAR(255),
+                CATEGORY VARCHAR(255),
+                VERTICAL VARCHAR(255),
+                INTERVIEW_AVAILABLE VARCHAR(255),
+                TIME_AVAILABLE VARCHAR(255),
+                NOTICE_PERIOD VARCHAR(255),
+                RATING VARCHAR(255)
+            )
+            """
+        ]
+
+        # Execute table creation queries
+        for query in table_queries:
+            cursor.execute(query)
+
+        logging.info("Tables and columns created successfully")
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+        raise CustomException(e, sys)
+
+
+
 def extract_new_client_details():
     try:
-
-        # Connection from Python to MySQL
         mydb = conn.connect(host=host,user=user_name,password=password,database=database)
-
-        # Creating a pointer to the MySQL database
         cursor = mydb.cursor()
-
         # execute sql query to retrive new_client details
         query = "SELECT * FROM new_client ORDER BY id DESC LIMIT 1"  # we can get the row with highest id value
         cursor.execute(query)
-
         # Fetch the result
         result = cursor.fetchone()  # getting only one row
-
         if result:
             # Extract the columns from the result
             (
@@ -234,4 +287,5 @@ def extract_job_seeker_details():
     
 
 
-    
+create_database(host, user, password)
+create_tables(host, user, password,database)

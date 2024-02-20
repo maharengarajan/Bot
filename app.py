@@ -6,6 +6,8 @@ from src.alert import send_email
 from src.database import extract_new_client_details
 from src.database import extract_existing_client_details
 from src.database import extract_job_seeker_details
+from src.database import connect_to_mysql
+from src.database import create_cursor_object
 from datetime import datetime, timezone
 import mysql.connector as conn
 from src.logger import logging
@@ -31,8 +33,8 @@ database = os.getenv("database_name")
 
 
 # Connection from Python to MySQL
-mydb = conn.connect(host=host,user=user_name,password=password,database=database)
-cursor = mydb.cursor()
+# mydb = conn.connect(host=host,user=user_name,password=password,database=database)
+# cursor = mydb.cursor()
 
 
 def get_current_utc_datetime():
@@ -57,14 +59,14 @@ def extract_utc_date_and_time(utc_datetime):
 
 
 # Function to ping the MySQL server
-def ping_mysql_server():
-    try:
-        global mydb     # Assuming mydb is a global variable
-        if(mydb.is_connected() == 0):   # Check if the connection is not established
-            mydb = conn.connect(host=host,user=user_name,password=password,database=database)   # connection to mysql database     
-    except Exception as e:
-        logging.error(f"An error occurred: {e}")
-        raise CustomException(e,sys)
+# def ping_mysql_server():
+#     try:
+#         global mydb     # Assuming mydb is a global variable
+#         if(mydb.is_connected() == 0):   # Check if the connection is not established
+#             mydb = conn.connect(host=host,user=user_name,password=password,database=database)   # connection to mysql database     
+#     except Exception as e:
+#         logging.error(f"An error occurred: {e}")
+#         raise CustomException(e,sys)
 
 
 def get_ip_address():
@@ -176,7 +178,9 @@ def client():
 @app.route("/chatbot/new_client_details", methods=["POST"])
 def new_client_details():
     try:
-        ping_mysql_server()
+        # ping_mysql_server()
+        mydb = connect_to_mysql(host, user_name, password, database)
+        cursor = create_cursor_object(mydb)
         current_utc_datetime = get_current_utc_datetime()
         utc_date, utc_time = extract_utc_date_and_time(current_utc_datetime)
         ip_address = get_ip_address()
@@ -199,7 +203,7 @@ def new_client_details():
 
         query = "INSERT INTO new_client (DATE, TIME, IP_ADDRESS, NAME, EMAIL_ID, CONTACT_NUMBER, COMPANY_NAME) VALUES (%s, %s, %s, %s, %s, %s, %s)"
         values = (utc_date, utc_time, ip_address, name, email, contact, company, )
-        cursor = mydb.cursor()
+        # cursor = mydb.cursor()
         cursor.execute(query, values)
         row_id = cursor.lastrowid  # Get the ID (primary key) of the inserted row
         mydb.commit()  # Commit the changes to the database
@@ -232,7 +236,9 @@ def is_valid_contact_number(contact):
 @app.route("/chatbot/new_client/user_details/industries", methods=["POST"])
 def industries():
     try:
-        ping_mysql_server()
+        # ping_mysql_server()
+        mydb = connect_to_mysql(host, user_name, password, database)
+        cursor = create_cursor_object(mydb)
         industries = {
             "1": "Insurance",
             "2": "Banking",
@@ -261,7 +267,7 @@ def industries():
 
         query = "UPDATE new_client SET INDUSTRY = %s WHERE ID = %s"
         values = (industry_str, row_id)
-        cursor = mydb.cursor()
+        # cursor = mydb.cursor()
         cursor.execute(query, values)
         mydb.commit()
         logging.info(f"new client industry saved in DB - {industry_str}")
@@ -276,7 +282,9 @@ def industries():
 @app.route("/chatbot/new_client/user_details/industries/verticals", methods=["POST"])
 def verticals_new_client():
     try:
-        ping_mysql_server()
+        # ping_mysql_server()
+        mydb = connect_to_mysql(host, user_name, password, database)
+        cursor = create_cursor_object(mydb)
         verticals = {
             "1": "ML/DS/AI",
             "2": "Sales force",
@@ -303,7 +311,7 @@ def verticals_new_client():
 
         query = "UPDATE new_client SET VERTICAL = %s WHERE ID = %s"
         values = (vertical_str, row_id)
-        cursor = mydb.cursor()
+        # cursor = mydb.cursor()
         cursor.execute(query, values)
         mydb.commit()
         logging.info(f"new client vertical saved in DB - {vertical_str}")
@@ -317,7 +325,9 @@ def verticals_new_client():
 @app.route("/chatbot/new_client/user_details/industries/verticals/requirement",methods=["POST"])
 def requirement():
     try:
-        ping_mysql_server()
+        # ping_mysql_server()
+        mydb = connect_to_mysql(host, user_name, password, database)
+        cursor = create_cursor_object(mydb)
         requirements = {
             "1": "Start the project from scratch",
             "2": "Require support from existing project",
@@ -339,7 +349,7 @@ def requirement():
 
             query = "UPDATE new_client SET REQUIREMENTS = %s WHERE ID = %s"
             values = (selected_requirement, row_id)
-            cursor = mydb.cursor()
+            # cursor = mydb.cursor()
             cursor.execute(query, values)
             mydb.commit()
             logging.info(f"new client requirement saved in DB - {selected_requirement}")
@@ -355,7 +365,9 @@ def requirement():
 @app.route("/chatbot/new_client/user_details/industries/verticals/requirement/known_source",methods=["POST"])
 def known_source():
     try:
-        ping_mysql_server()
+        # ping_mysql_server()
+        mydb = connect_to_mysql(host, user_name, password, database)
+        cursor = create_cursor_object(mydb)
         known_sources = {
             "1": "Google",
             "2": "LinkedIn",
@@ -378,7 +390,7 @@ def known_source():
 
             query = "UPDATE new_client SET KNOWN_SOURCE = %s WHERE ID = %s"
             values = (selected_known_source, row_id)
-            cursor = mydb.cursor()
+            # cursor = mydb.cursor()
             cursor.execute(query, values)
             mydb.commit()
             logging.info(f"new client known source saved in DB - {selected_known_source}")
@@ -424,7 +436,9 @@ def known_source():
 @app.route("/chatbot/existing_client_details", methods=["POST"])
 def existing_client_details():
     try:
-        ping_mysql_server()
+        # ping_mysql_server()
+        mydb = connect_to_mysql(host, user_name, password, database)
+        cursor = create_cursor_object(mydb)
         current_utc_datetime = get_current_utc_datetime()
         utc_date, utc_time = extract_utc_date_and_time(current_utc_datetime)
         ip_address = get_ip_address()
@@ -447,7 +461,7 @@ def existing_client_details():
 
         query = "INSERT INTO existing_client (DATE, TIME, IP_ADDRESS, NAME, EMAIL_ID, CONTACT_NUMBER, COMPANY_NAME) VALUES (%s, %s, %s, %s, %s, %s, %s)"
         values = (utc_date, utc_time, ip_address, name, email, contact, company)
-        cursor = mydb.cursor()
+        # cursor = mydb.cursor()
         cursor.execute(query, values)
         row_id = cursor.lastrowid  # Get the ID (primary key) of the inserted row
         mydb.commit()  # Commit the changes to the database
@@ -481,7 +495,9 @@ def is_valid_contact_number(contact):
 @app.route("/chatbot/existing_client_details/verticals", methods=["POST"])
 def verticals_exixting_client():
     try:
-        ping_mysql_server()
+        # ping_mysql_server()
+        mydb = connect_to_mysql(host, user_name, password, database)
+        cursor = create_cursor_object(mydb)
         verticals = {
             "1": "ML/DS/AI",
             "2": "Sales force",
@@ -508,7 +524,7 @@ def verticals_exixting_client():
 
         query = "UPDATE existing_client SET VERTICAL = %s WHERE ID = %s"
         values = (vertical_str, row_id)
-        cursor = mydb.cursor()
+        # cursor = mydb.cursor()
         cursor.execute(query, values)
         mydb.commit()
         logging.info(f"new client vertical saved in DB - {vertical_str}")
@@ -522,7 +538,9 @@ def verticals_exixting_client():
 @app.route("/chatbot/existing_client_details/verticals/issue_escalation", methods=["POST"])
 def issue_escalation():
     try:
-        ping_mysql_server()
+        # ping_mysql_server()
+        mydb = connect_to_mysql(host, user_name, password, database)
+        cursor = create_cursor_object(mydb)
         issue_escalation_options = {
             "1": "Team Lead",
             "2": "Sales Person",
@@ -538,7 +556,7 @@ def issue_escalation():
 
             query = "UPDATE existing_client SET ISSUE_ESCALATION = %s WHERE ID = %s"
             values = (selected_issue_escalation, row_id)
-            cursor = mydb.cursor()
+            # cursor = mydb.cursor()
             cursor.execute(query, values)
             mydb.commit()
             logging.info(f"issue escalation selected - {selected_issue_escalation}")
@@ -556,7 +574,9 @@ def issue_escalation():
 @app.route("/chatbot/existing_client_details/verticals/issue_escalation/issue_type",methods=["POST"])
 def issue_type():
     try:
-        ping_mysql_server()
+        # ping_mysql_server()
+        mydb = connect_to_mysql(host, user_name, password, database)
+        cursor = create_cursor_object(mydb)
         issue_type_options = {"1": "Normal", "2": "Urgent"}
 
         data = request.get_json()
@@ -574,7 +594,7 @@ def issue_type():
             query = "UPDATE existing_client SET ISSUE_TYPE = %s WHERE ID = %s"
             values = (selected_issue_type, row_id)
             logging.info(f"issue type saved - {selected_issue_type}")
-            cursor = mydb.cursor()
+            # cursor = mydb.cursor()
             cursor.execute(query, values)
             mydb.commit()
 
@@ -621,7 +641,9 @@ def issue_type():
 @app.route("/chatbot/job_seeker_details", methods=["POST"])
 def job_seeker_details():
     try:
-        ping_mysql_server()
+        # ping_mysql_server()
+        mydb = connect_to_mysql(host, user_name, password, database)
+        cursor = create_cursor_object(mydb)
         current_utc_datetime = get_current_utc_datetime()
         utc_date, utc_time = extract_utc_date_and_time(current_utc_datetime)
         ip_address = get_ip_address()
@@ -644,7 +666,7 @@ def job_seeker_details():
         query = "INSERT INTO job_seeker (DATE, TIME, IP_ADDRESS, NAME, EMAIL_ID, CONTACT_NUMBER) VALUES (%s, %s, %s, %s, %s, %s)"
         values = (utc_date, utc_time, ip_address, name, email, contact)
         cursor = mydb.cursor()
-        cursor.execute(query, values)
+        # cursor.execute(query, values)
         row_id = cursor.lastrowid
         mydb.commit()
         logging.info("job seeker contact details saved in DB")
@@ -676,7 +698,9 @@ def is_valid_contact_number(contact):
 @app.route("/chatbot/job_seeker_details/category", methods=["POST"])
 def category():
     try:
-        ping_mysql_server()
+        # ping_mysql_server()
+        mydb = connect_to_mysql(host, user_name, password, database)
+        cursor = create_cursor_object(mydb)
         category_type = {"1": "Fresher", "2": "Experienced", "3": "External consultant"}
 
         data = request.get_json()
@@ -688,7 +712,7 @@ def category():
 
             query = "UPDATE job_seeker SET category = %s WHERE ID = %s"
             values = (selected_category_type, row_id)
-            cursor = mydb.cursor()
+            # cursor = mydb.cursor()
             cursor.execute(query, values)
             mydb.commit()
             logging.info(f"job seeker category saved - {selected_category_type}")
@@ -704,7 +728,9 @@ def category():
 @app.route("/chatbot/job_seeker_details/category/verticals", methods=["POST"])
 def verticals_job_seeker():
     try:
-        ping_mysql_server()
+        # ping_mysql_server()
+        mydb = connect_to_mysql(host, user_name, password, database)
+        cursor = create_cursor_object(mydb)
         verticals = {
             "1": "ML/DS/AI",
             "2": "Sales force",
@@ -731,7 +757,7 @@ def verticals_job_seeker():
 
         query = "UPDATE job_seeker SET VERTICAL = %s WHERE ID = %s"
         values = (vertical_str, row_id)
-        cursor = mydb.cursor()
+        # cursor = mydb.cursor()
         cursor.execute(query, values)
         mydb.commit()
         logging.info(f"job seeker vertical saved in DB - {vertical_str}")
@@ -745,7 +771,9 @@ def verticals_job_seeker():
 @app.route("/chatbot/job_seeker_details/category/verticals/interview_avail", methods=["POST"])
 def interview_available_check():
     try:
-        ping_mysql_server()
+        # ping_mysql_server()
+        mydb = connect_to_mysql(host, user_name, password, database)
+        cursor = create_cursor_object(mydb)
         interview_avail_options = {"1": "Yes", "2": "No"}
 
         data = request.get_json()
@@ -757,7 +785,7 @@ def interview_available_check():
 
             query = "UPDATE job_seeker SET INTERVIEW_AVAILABLE = %s WHERE ID = %s"
             values = (selected_interview_avail, row_id)
-            cursor = mydb.cursor()
+            # cursor = mydb.cursor()
             cursor.execute(query, values)
             mydb.commit()
             logging.info(f"interview availability checked - {selected_interview_avail}")
@@ -780,14 +808,16 @@ def interview_available_check():
 @app.route("/chatbot/job_seeker_details/category/verticals/interview_avail/date_of_interview",methods=["POST"])
 def date_of_interview():
     try:
-        ping_mysql_server()
+        # ping_mysql_server()
+        mydb = connect_to_mysql(host, user_name, password, database)
+        cursor = create_cursor_object(mydb)
         data = request.get_json()
         row_id = data.get("row_id")
         interview_date = data.get("interview_date")
 
         query = "UPDATE job_seeker SET TIME_AVAILABLE = %s WHERE ID = %s"
         values = (interview_date, row_id)
-        cursor = mydb.cursor()
+        # cursor = mydb.cursor()
         cursor.execute(query, values)
         mydb.commit()
         logging.info(f"intervie date available collected - {interview_date}")
@@ -803,7 +833,9 @@ def date_of_interview():
 @app.route("/chatbot/job_seeker_details/category/verticals/interview_avail/date_of_interview/notice_period",methods=["POST"])
 def notice_period():
     try:
-        ping_mysql_server()
+        # ping_mysql_server()
+        mydb = connect_to_mysql(host, user_name, password, database)
+        cursor = create_cursor_object(mydb)
         notice_period_options = {"1": "Below 30 days", "2": "30 days", "3": "60 days", "4": "90 days"}
         data = request.get_json()
         row_id = data.get("row_id")
@@ -814,7 +846,7 @@ def notice_period():
 
             query = "UPDATE job_seeker SET NOTICE_PERIOD = %s WHERE ID = %s"
             values = (selected_notice_period_options, row_id)
-            cursor = mydb.cursor()
+            # cursor = mydb.cursor()
             cursor.execute(query, values)
             mydb.commit()
             logging.info(f"notice period collected - {selected_notice_period_options}")
@@ -857,6 +889,86 @@ def notice_period():
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
 
+
+
+
+# this API responsible for getting new client rating about our chatbot
+@app.route('/chatbot/new_client/user_details/industries/verticals/requirement/known_source/rate', methods=['POST'])
+def get_rating_new_client():
+    try:
+        credentials = {
+    '1': 'Requires Improvement',
+    '2': 'Acceptable',
+    '3': 'Above Average',
+    '4': 'Excellent',
+    '5': 'Outstanding'
+}
+        data = request.get_json()
+        selected_option = str(data['option'])
+
+        if selected_option in credentials:
+            response = {'status': 'success', 'message':  str(credentials[selected_option]), 'code': 200}
+        else:
+            response = {'status': 'error', 'message': 'Invalid option. Please choose from 1 to 5.'}
+
+    except Exception as e:
+        logging.error(f"Error in processing request: {e}")
+        return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    
+    return jsonify(response)
+
+
+# this API responsible for getting existing client rating about our chatbot
+@app.route('/chatbot/existing_client_details/verticals/issue_escalation/issue_type/rate', methods=['POST'])
+def get_rating_existing_client():
+    try:
+        credentials = {
+    '1': 'Requires Improvement',
+    '2': 'Acceptable',
+    '3': 'Above Average',
+    '4': 'Excellent',
+    '5': 'Outstanding'
+}
+        data = request.get_json()
+        selected_option = str(data['option'])
+
+        if selected_option in credentials:
+            response = {'status': 'success', 'message':  str(credentials[selected_option]), 'code': 200}
+        else:
+            response = {'status': 'error', 'message': 'Invalid option. Please choose from 1 to 5.'}
+
+    except Exception as e:
+        logging.error(f"Error in processing request: {e}")
+        return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    
+    return jsonify(response)
+
+
+
+# this API responsible for getting job seeker rating about our chatbot
+@app.route('/chatbot/job_seeker_details/category/verticals/interview_avail/date_of_interview/notice_period/rate', methods=['POST'])
+def get_rating_job_seeker():
+    try:
+        credentials = {
+    '1': 'Requires Improvement',
+    '2': 'Acceptable',
+    '3': 'Above Average',
+    '4': 'Excellent',
+    '5': 'Outstanding'
+}
+        data = request.get_json()
+        selected_option = str(data['option'])
+
+        if selected_option in credentials:
+            response = {'status': 'success', 'message':  str(credentials[selected_option]), 'code': 200}
+        else:
+            response = {'status': 'error', 'message': 'Invalid option. Please choose from 1 to 5.'}
+
+    except Exception as e:
+        logging.error(f"Error in processing request: {e}")
+        return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    
+    return jsonify(response)
 
 if __name__ == "__main__":
     app.run(debug=True)
