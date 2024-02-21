@@ -1,23 +1,30 @@
 import os
 from flask import Flask, jsonify, request
-from src.alert import send_email
-from src.database import extract_new_client_details
-from src.database import extract_existing_client_details
-from src.database import extract_job_seeker_details
-from src.database import connect_to_mysql_database
-from src.database import create_cursor_object
-from src.utils import get_current_utc_datetime
-from src.utils import extract_utc_date_and_time
-from src.utils import is_valid_name
-from src.utils import is_valid_email
-from src.utils import is_valid_contact_number
-from src.greet import get_ip_address
-from src.greet import get_location
-from src.greet import get_weather
-from src.greet import weather_greeting
-from src.logger import logging
-from dotenv import load_dotenv
 from flask_cors import CORS
+from dotenv import load_dotenv
+
+from src.alert import send_email
+from src.database import (
+    extract_new_client_details,
+    extract_existing_client_details,
+    extract_job_seeker_details,
+    connect_to_mysql_database,
+    create_cursor_object
+)
+from src.utils import (
+    get_current_utc_datetime,
+    extract_utc_date_and_time,
+    is_valid_name,
+    is_valid_email,
+    is_valid_contact_number
+)
+from src.greet import (
+    get_ip_address,
+    get_location,
+    get_weather,
+    weather_greeting
+)
+from src.logger import logging
 
 
 app = Flask(__name__)
