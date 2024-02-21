@@ -1,20 +1,23 @@
 import os
 from flask import Flask, jsonify, request
-import re
-import requests
 from src.alert import send_email
 from src.database import extract_new_client_details
 from src.database import extract_existing_client_details
 from src.database import extract_job_seeker_details
 from src.database import connect_to_mysql_database
 from src.database import create_cursor_object
-from datetime import datetime, timezone
-import mysql.connector as conn
+from src.utils import get_current_utc_datetime
+from src.utils import extract_utc_date_and_time
+from src.utils import is_valid_name
+from src.utils import is_valid_email
+from src.utils import is_valid_contact_number
+from src.greet import get_ip_address
+from src.greet import get_location
+from src.greet import get_weather
+from src.greet import weather_greeting
 from src.logger import logging
 from dotenv import load_dotenv
 from flask_cors import CORS
-from src.exception import CustomException
-import sys
 
 
 app = Flask(__name__)
@@ -25,89 +28,12 @@ CORS(app)
 def configure():
     load_dotenv()
 
+
 configure()
 host = os.getenv("database_host_name")
 user = os.getenv("database_user_name")
 password = os.getenv("database_user_password")
 database = os.getenv("database_name")
-
-
-def get_current_utc_datetime():
-    try:
-        current_utc_datetime = datetime.now(timezone.utc)
-        logging.info("current date time collected successfully")
-        return current_utc_datetime
-    except Exception as e:
-        logging.error(f"An error occurred: {e}")
-        raise CustomException(e,sys)
-
-
-def extract_utc_date_and_time(utc_datetime):
-    try:
-        utc_date = utc_datetime.strftime('%Y-%m-%d')
-        utc_time = utc_datetime.strftime('%H:%M:%S')
-        logging.info("UTC date and UTC time colleceted")
-        return utc_date, utc_time
-    except Exception as e:
-        logging.error(f"An error occurred: {e}")
-        raise CustomException(e,sys)
-
-
-def get_ip_address():
-    try:
-        configure()
-        ip = requests.get(os.getenv('ip_api_key')).text
-        logging.info(f"ip address collected successfully")
-        return ip
-    except requests.RequestException as e:
-        logging.error(f"Error getting IP address: {e}")
-        print(f"Error getting IP address: {e}")
-        return None
-
-
-def get_location(ip):
-    try:
-        location = requests.get(f"https://ipapi.co/{ip}/city/").text
-        logging.info(f"Location collected successfully")
-        return location
-    except requests.RequestException as e:
-        logging.error(f"Error getting location: {e}")
-        print(f"Error getting location: {e}")
-        return None
-
-
-def get_weather(location):
-    try:
-        configure()
-        url = f"http://api.openweathermap.org/data/2.5/weather?q={location}&appid={os.getenv('weather_api_key')}"
-        response = requests.get(url).json()
-
-        if response.get("cod") == 200:
-            weather_desc = response["weather"][0]["main"].lower()
-            logging.info(f"current weather condition is {weather_desc}")
-            return weather_desc
-        else:
-            return None
-    except requests.RequestException as e:
-        logging.error(f"Error getting weather: {e}")
-        print(f"Error getting weather: {e}")
-        return None
-
-
-def weather_greeting(weather_desc):
-    if weather_desc is None:
-        return None
-
-    if weather_desc in ["thunderstorm", "drizzle", "rain", "snow"]:
-        return f"It seems like there's {weather_desc} outside. Stay safe!"
-    elif weather_desc in ["atmosphere", "clear", "clouds"]:
-        return f"Enjoy the {weather_desc} weather!"
-    elif weather_desc in ["mist", "smoke", "haze", "dust", "fog", "sand", "ash"]:
-        return f"Be cautious as there's {weather_desc} in the air."
-    elif weather_desc in ["squall", "tornado"]:
-        return f"Take extra precautions due to {weather_desc} in the area."
-    else:
-        return None
 
 
 # this API responsible for greeting the user
@@ -200,18 +126,6 @@ def new_client_details():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
-
-
-def is_valid_name(name):
-    return bool(re.match(r"^[A-Za-z\s]+$", name.strip()))
-
-
-def is_valid_email(email):
-    return bool(re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email))
-
-
-def is_valid_contact_number(contact):
-    return bool(re.match(r"^\+?\d{1,3}[-.\s]?\(?\d{1,3}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}$",contact,))
 
 
 # this API is responsible for selecting industries
@@ -484,19 +398,6 @@ def existing_client_details():
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
 
 
-def is_valid_name(name):
-    return bool(re.match(r"^[A-Za-z\s]+$", name.strip()))
-
-
-def is_valid_email(email):
-    return bool(re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email))
-
-
-def is_valid_contact_number(contact):
-    return bool(re.match(r"^\+?\d{1,3}[-.\s]?\(?\d{1,3}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}$",contact))
-
-
-
 # this API is responsible for selecting verticals for existing client and save in DB
 @app.route("/chatbot/existing_client_details/verticals", methods=["POST"])
 def verticals_exixting_client():
@@ -716,18 +617,6 @@ def job_seeker_details():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
-
-
-def is_valid_name(name):
-    return bool(re.match(r"^[A-Za-z\s]+$", name.strip()))
-
-
-def is_valid_email(email):
-    return bool(re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email))
-
-
-def is_valid_contact_number(contact):
-    return bool(re.match(r"^\+?\d{1,3}[-.\s]?\(?\d{1,3}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}$",contact))
 
 
 # this API responsible for collecting user category of job seeker and save in DB
