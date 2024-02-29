@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 
 from src.alert import send_email
 from src.database import (
+    create_tables,
+    create_database,
     extract_new_client_details,
     extract_existing_client_details,
     extract_job_seeker_details,
@@ -43,6 +45,39 @@ password = os.getenv("database_user_password")
 database = os.getenv("database_name")
 
 
+# this api is responsible for creating a database
+@app.route('/create_database', methods=['POST'])
+def create_database_api():
+    try:
+        data = request.get_json()
+        host = data.get('host')
+        user = data.get('user')
+        password = data.get('password')
+
+        result = create_database(host, user, password)
+        return jsonify(result)
+    except Exception as e:
+        logging.error(f"Error in processing request: {e}")
+        return jsonify({"status": "error", "message": "Internal Server Error", "error": str(e)}), 500
+
+
+# the below API is responsible for create tables
+@app.route('/create_tables', methods=['POST'])
+def create_tables_api():
+    try:
+        data = request.get_json()
+        host = data.get('host')
+        user = data.get('user')
+        password = data.get('password')
+        database = data.get('database')
+
+        result = create_tables(host, user, password, database)
+        return jsonify(result)
+    except Exception as e:
+        logging.error(f"Error in processing request: {e}")
+        return jsonify({"status": "error", "message": "Internal Server Error", "error": str(e)}), 500
+    
+
 # this API responsible for greeting the user
 @app.route("/chatbot/greeting", methods=["GET"])
 def get_greeting():
@@ -62,7 +97,7 @@ def get_greeting():
             return jsonify({"status": "success", "message": message})
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
-        return jsonify({"status": "error", "message": "Internal Server Error"}), 500
+        return jsonify({"status": "error", "message": "Internal Server Error", "error": str(e)}), 500
     
 
 # this API is responsible for choosing client type
@@ -88,7 +123,7 @@ def client():
         return jsonify({"message": message, "code": status_code})
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
-        return jsonify({"message": "Internal server error.", "status": "error"}), 500
+        return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
     
 
 # this API responsible for collecting user details from new client and save in DB
@@ -190,7 +225,8 @@ def verticals_new_client():
             "2": "Sales force",
             "3": "Microsoft dynamics",
             "4": "Custom app",
-            "5": "Others",
+            "5": "IT Infrastructure",
+            "6": "Others",
         }
 
         data = request.get_json()
@@ -201,7 +237,7 @@ def verticals_new_client():
         
         for opt in user_input:
             if opt in verticals:
-                if opt == '5':
+                if opt == '6':
                     source_specification = data.get("source_specification")
                     user_selected_verticals.append(verticals[opt] + " : " + source_specification)
                 else:
@@ -416,7 +452,8 @@ def verticals_exixting_client():
             "2": "Sales force",
             "3": "Microsoft dynamics",
             "4": "Custom app",
-            "5": "Others",
+            "5": "IT Infrastructure",
+            "6": "Others",
         }
 
         data = request.get_json()
@@ -427,7 +464,7 @@ def verticals_exixting_client():
         
         for opt in user_input:
             if opt in verticals:
-                if opt == '5':
+                if opt == '6':
                     source_specification = data.get("source_specification")
                     user_selected_verticals.append(verticals[opt] + " : " + source_specification)
                 else:
@@ -665,7 +702,8 @@ def verticals_job_seeker():
             "2": "Sales force",
             "3": "Microsoft dynamics",
             "4": "Custom app",
-            "5": "Others",
+            "5": "IT Infrastructure",
+            "6": "Others",
         }
 
         data = request.get_json()
@@ -676,7 +714,7 @@ def verticals_job_seeker():
         
         for opt in user_input:
             if opt in verticals:
-                if opt == '5':
+                if opt == '6':
                     source_specification = data.get("source_specification")
                     user_selected_verticals.append(verticals[opt] + " : " + source_specification)
                 else:
@@ -847,7 +885,7 @@ def get_rating_job_seeker():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
-
+    
 
 if __name__ == "__main__":
     app.run(debug=True)
