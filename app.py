@@ -3,8 +3,8 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
 
-from src.alert import send_email
-from src.database import (
+from src.bot.alert import send_email
+from src.bot.database import (
     create_tables,
     create_database,
     extract_new_client_details,
@@ -13,20 +13,22 @@ from src.database import (
     connect_to_mysql_database,
     create_cursor_object
 )
-from src.utils import (
+from src.bot.utils import (
     get_current_utc_datetime,
     extract_utc_date_and_time,
     is_valid_name,
     is_valid_email,
     is_valid_contact_number
 )
-from src.greet import (
+from src.bot.greet import (
     get_ip_address,
     get_location,
     get_weather,
     weather_greeting
 )
-from src.logger import logging
+from src.bot.logger import logging
+# import ssl
+
 
 
 app = Flask(__name__)
@@ -37,12 +39,13 @@ CORS(app)
 def configure():
     load_dotenv()
 
-
 configure()
 host = os.getenv("database_host_name")
 user = os.getenv("database_user_name")
 password = os.getenv("database_user_password")
 database = os.getenv("database_name")
+# CERT_FILE = os.getenv("CERT_FILE")
+# KEY_FILE = os.getenv("KEY_FILE")
 
 
 # this api is responsible for creating a database
@@ -55,7 +58,7 @@ def create_database_api():
         password = data.get('password')
 
         result = create_database(host, user, password)
-        return jsonify(result)
+        return jsonify(result, {"status": "success", "message": "DB created successfully"})
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"status": "error", "message": "Internal Server Error", "error": str(e)}), 500
@@ -72,7 +75,7 @@ def create_tables_api():
         database = data.get('database')
 
         result = create_tables(host, user, password, database)
-        return jsonify(result)
+        return jsonify(result, {"status": "success", "message": "Tables created successfully"})
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"status": "error", "message": "Internal Server Error", "error": str(e)}), 500
@@ -152,7 +155,7 @@ def new_client_details():
 
         user_details = {"ip_address":ip_address, "name": name, "email": email, "contact": contact, "company":company}
 
-        query = "INSERT INTO chatbot.new_client (DATE, TIME, IP_ADDRESS, NAME, EMAIL_ID, CONTACT_NUMBER, COMPANY_NAME) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        query = "INSERT INTO demodata_bot.new_client (DATE, TIME, IP_ADDRESS, NAME, EMAIL_ID, CONTACT_NUMBER, COMPANY_NAME) VALUES (%s, %s, %s, %s, %s, %s, %s)"
         values = (utc_date, utc_time, ip_address, name, email, contact, company, )
         cursor.execute(query, values)
         row_id = cursor.lastrowid  # Get the ID (primary key) of the inserted row
@@ -180,11 +183,13 @@ def industries():
             "1": "Insurance",
             "2": "Banking",
             "3": "Finance",
-            "4": "IT",
+            "4": "Logistics",
             "5": "Healthcare",
-            "6": "Internet",
-            "7": "Automobile",
-            "8": "Others",
+            "6": "Manufacturing",
+            "7": "Ecommerce",
+            "8": "Technology",
+            "9": "Automobile",
+            "10": "Others",
         }
         data = request.get_json()
         row_id = data.get("row_id")  # Get the user ID from the request
@@ -194,7 +199,7 @@ def industries():
         
         for opt in user_input:
             if opt in industries:
-                if opt == '8':
+                if opt == '10':
                     source_specification = data.get("source_specification")
                     user_selected_industries.append(industries[opt] + " : " + source_specification)
                 else:
@@ -202,7 +207,7 @@ def industries():
 
         industry_str = ",".join(user_selected_industries)  # Convert lists to strings
 
-        query = "UPDATE chatbot.new_client SET INDUSTRY = %s WHERE ID = %s"
+        query = "UPDATE demodata_bot.new_client SET INDUSTRY = %s WHERE ID = %s"
         values = (industry_str, row_id)
         cursor.execute(query, values)
         mydb.commit()
@@ -221,11 +226,11 @@ def verticals_new_client():
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
         verticals = {
-            "1": "ML/DS/AI",
-            "2": "Sales force",
+            "1": "Data and AI",
+            "2": "IT Infrastructure",
             "3": "Microsoft dynamics",
             "4": "Custom app",
-            "5": "IT Infrastructure",
+            "5": "Sales force", 
             "6": "Others",
         }
 
@@ -245,7 +250,7 @@ def verticals_new_client():
 
         vertical_str = ",".join(user_selected_verticals)
 
-        query = "UPDATE chatbot.new_client SET VERTICAL = %s WHERE ID = %s"
+        query = "UPDATE demodata_bot.new_client SET VERTICAL = %s WHERE ID = %s"
         values = (vertical_str, row_id)
         cursor.execute(query, values)
         mydb.commit()
@@ -281,7 +286,7 @@ def requirement():
             else:
                 selected_requirement = requirements[user_selected_option]
 
-            query = "UPDATE chatbot.new_client SET REQUIREMENTS = %s WHERE ID = %s"
+            query = "UPDATE demodata_bot.new_client SET REQUIREMENTS = %s WHERE ID = %s"
             values = (selected_requirement, row_id)
             cursor.execute(query, values)
             mydb.commit()
@@ -305,7 +310,7 @@ def known_source():
             "2": "LinkedIn",
             "3": "Email Campaign",
             "4": "News Letter",
-            "5": "Known resources",
+            "5": "Hope you get to know about us from ? ",
             "6": "Others",
         }
 
@@ -320,7 +325,7 @@ def known_source():
             else:
                 selected_known_source = known_sources[selected_option]
 
-            query = "UPDATE chatbot.new_client SET KNOWN_SOURCE = %s WHERE ID = %s"
+            query = "UPDATE demodata_bot.new_client SET KNOWN_SOURCE = %s WHERE ID = %s"
             values = (selected_known_source, row_id)
             cursor.execute(query, values)
             mydb.commit()
@@ -332,7 +337,6 @@ def known_source():
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
     
-
 
 # this API responsible for getting new client rating about our chatbot
 @app.route('/chatbot/new_client/user_details/industries/verticals/requirement/known_source/rate', methods=['POST'])
@@ -355,7 +359,7 @@ def get_rating_new_client():
             user_select = str(credentials[selected_option])
             response = {'status': 'success', 'message':  user_select, 'code': 200}
 
-            query = "UPDATE chatbot.new_client SET RATING = %s WHERE ID = %s"
+            query = "UPDATE demodata_bot.new_client SET RATING = %s WHERE ID = %s"
             values = (user_select, row_id)
             cursor.execute(query, values)
             mydb.commit()
@@ -395,7 +399,7 @@ def get_rating_new_client():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
-    
+
 
 # this API responsible for collecting user details
 @app.route("/chatbot/existing_client_details", methods=["POST"])
@@ -423,7 +427,7 @@ def existing_client_details():
 
         user_details = {"ip_address":ip_address, "name": name, "email": email, "contact": contact, "company": company}
 
-        query = "INSERT INTO chatbot.existing_client (DATE, TIME, IP_ADDRESS, NAME, EMAIL_ID, CONTACT_NUMBER, COMPANY_NAME) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        query = "INSERT INTO demodata_bot.existing_client (DATE, TIME, IP_ADDRESS, NAME, EMAIL_ID, CONTACT_NUMBER, COMPANY_NAME) VALUES (%s, %s, %s, %s, %s, %s, %s)"
         values = (utc_date, utc_time, ip_address, name, email, contact, company)
         cursor.execute(query, values)
         row_id = cursor.lastrowid  # Get the ID (primary key) of the inserted row
@@ -472,7 +476,7 @@ def verticals_exixting_client():
 
         vertical_str = ",".join(user_selected_verticals)
 
-        query = "UPDATE chatbot.existing_client SET VERTICAL = %s WHERE ID = %s"
+        query = "UPDATE demodata_bot.existing_client SET VERTICAL = %s WHERE ID = %s"
         values = (vertical_str, row_id)
         cursor.execute(query, values)
         mydb.commit()
@@ -502,7 +506,7 @@ def issue_escalation():
         if selected_option in issue_escalation_options:
             selected_issue_escalation = issue_escalation_options[selected_option]
 
-            query = "UPDATE chatbot.existing_client SET ISSUE_ESCALATION = %s WHERE ID = %s"
+            query = "UPDATE demodata_bot.existing_client SET ISSUE_ESCALATION = %s WHERE ID = %s"
             values = (selected_issue_escalation, row_id)
             cursor.execute(query, values)
             mydb.commit()
@@ -537,7 +541,7 @@ def issue_type():
             elif selected_issue_type == "Urgent":
                 response_message = "Thank you. We have saved your issue as urgent and will contact you immediately."
 
-            query = "UPDATE chatbot.existing_client SET ISSUE_TYPE = %s WHERE ID = %s"
+            query = "UPDATE demodata_bot.existing_client SET ISSUE_TYPE = %s WHERE ID = %s"
             values = (selected_issue_type, row_id)
             logging.info(f"existing client issue type saved - {selected_issue_type}")
             cursor.execute(query, values)
@@ -555,7 +559,7 @@ def issue_type():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
-    
+
 
 # this API responsible for getting existing client rating about our chatbot
 @app.route('/chatbot/existing_client_details/verticals/issue_escalation/issue_type/rate', methods=['POST'])
@@ -577,7 +581,7 @@ def get_rating_existing_client():
             user_selected = str(credentials[selected_option])
             response = {'status': 'success', 'message':  user_selected, 'code': 200}
 
-            query = "UPDATE chatbot.existing_client SET RATING = %s WHERE ID = %s"
+            query = "UPDATE demodata_bot.existing_client SET RATING = %s WHERE ID = %s"
             values = (user_selected, row_id)
             cursor.execute(query, values)
             mydb.commit()
@@ -617,8 +621,7 @@ def get_rating_existing_client():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
-    
-    
+
 
 # this API responsible for collecting user details from job seeker and save in DB
 @app.route("/chatbot/job_seeker_details", methods=["POST"])
@@ -645,7 +648,7 @@ def job_seeker_details():
 
         user_details = {"ip_address":ip_address, "name": name, "email": email, "contact": contact}
 
-        query = "INSERT INTO chatbot.job_seeker (DATE, TIME, IP_ADDRESS, NAME, EMAIL_ID, CONTACT_NUMBER) VALUES (%s, %s, %s, %s, %s, %s)"
+        query = "INSERT INTO demodata_bot.job_seeker (DATE, TIME, IP_ADDRESS, NAME, EMAIL_ID, CONTACT_NUMBER) VALUES (%s, %s, %s, %s, %s, %s)"
         values = (utc_date, utc_time, ip_address, name, email, contact)
         cursor.execute(query, values)
         row_id = cursor.lastrowid
@@ -678,7 +681,7 @@ def category():
         if user_type in category_type:
             selected_category_type = category_type[user_type]
 
-            query = "UPDATE chatbot.job_seeker SET CATEGORY = %s WHERE ID = %s"
+            query = "UPDATE demodata_bot.job_seeker SET CATEGORY = %s WHERE ID = %s"
             values = (selected_category_type, row_id)
             cursor.execute(query, values)
             mydb.commit()
@@ -722,7 +725,7 @@ def verticals_job_seeker():
 
         vertical_str = ",".join(user_selected_verticals)
 
-        query = "UPDATE chatbot.job_seeker SET VERTICAL = %s WHERE ID = %s"
+        query = "UPDATE demodata_bot.job_seeker SET VERTICAL = %s WHERE ID = %s"
         values = (vertical_str, row_id)
         cursor.execute(query, values)
         mydb.commit()
@@ -748,7 +751,7 @@ def interview_available_check():
         if user_response in interview_avail_options:
             selected_interview_avail = interview_avail_options[user_response]
 
-            query = "UPDATE chatbot.job_seeker SET INTERVIEW_AVAILABLE = %s WHERE ID = %s"
+            query = "UPDATE demodata_bot.job_seeker SET INTERVIEW_AVAILABLE = %s WHERE ID = %s"
             values = (selected_interview_avail, row_id)
             cursor.execute(query, values)
             mydb.commit()
@@ -777,7 +780,7 @@ def date_of_interview():
         row_id = data.get("row_id")
         interview_date = data.get("interview_date")
 
-        query = "UPDATE chatbot.job_seeker SET TIME_AVAILABLE = %s WHERE ID = %s"
+        query = "UPDATE demodata_bot.job_seeker SET TIME_AVAILABLE = %s WHERE ID = %s"
         values = (interview_date, row_id)
         cursor.execute(query, values)
         mydb.commit()
@@ -804,7 +807,7 @@ def notice_period():
         if joining_date in notice_period_options:
             selected_notice_period_options = notice_period_options[joining_date]
 
-            query = "UPDATE chatbot.job_seeker SET NOTICE_PERIOD = %s WHERE ID = %s"
+            query = "UPDATE demodata_bot.job_seeker SET NOTICE_PERIOD = %s WHERE ID = %s"
             values = (selected_notice_period_options, row_id)
             cursor.execute(query, values)
             mydb.commit()
@@ -822,7 +825,7 @@ def notice_period():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
-    
+
 
 # this API responsible for getting job seeker rating about our chatbot
 @app.route('/chatbot/job_seeker_details/category/verticals/interview_avail/date_of_interview/notice_period/rate', methods=['POST'])
@@ -844,7 +847,7 @@ def get_rating_job_seeker():
             user_selected = str(credentials[selected_option])
             response = {'status': 'success', 'message':  user_selected, 'code': 200}
 
-            query = "UPDATE chatbot.job_seeker SET RATING = %s WHERE ID = %s"
+            query = "UPDATE demodata_bot.job_seeker SET RATING = %s WHERE ID = %s"
             values = (user_selected, row_id)
             cursor.execute(query, values)
             mydb.commit()
@@ -885,7 +888,13 @@ def get_rating_job_seeker():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
-    
+
+
+# context=  ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+# context.load_cert_chain(CERT_FILE,KEY_FILE)
+
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0",debug=True,port=9600)
+    # app.run(host="0.0.0.0",debug=True,port=9600,ssl_context=context)
+

@@ -1,11 +1,9 @@
 import os
 import sys
-
 import requests
 from dotenv import load_dotenv
-
-from src.exception import CustomException
-from src.logger import logging
+from src.bot.exception import CustomException
+from src.bot.logger import logging
 
 
 def configure():
@@ -16,7 +14,7 @@ def get_ip_address():
     try:
         configure()
         ip = requests.get(os.getenv('ip_api_key')).text
-        logging.info(f"ip address collected successfully")
+        logging.info("ip address collected successfully")
         return ip
     except Exception as e:
         logging.error(f"An error occurred: {e}")
@@ -26,7 +24,7 @@ def get_ip_address():
 def get_location(ip):
     try:
         location = requests.get(f"https://ipapi.co/{ip}/city/").text
-        logging.info(f"Location collected successfully")
+        logging.info("Location collected successfully")
         return location
     except Exception as e:
         logging.error(f"An error occurred: {e}")
@@ -68,12 +66,14 @@ def weather_greeting(weather_desc):
     except Exception as e:
         logging.error(f"An error occurred: {e}")
         raise CustomException(e,sys)
+    
 
-# ip = get_ip_address()
-# print(ip)
-# ip_location = get_location(ip)
-# print(ip_location)
-# weather_desc = get_weather(ip_location)
-# print(weather_desc)
-# weather_info_greet = weather_greeting(weather_desc)
-# print(weather_info_greet)
+if __name__=="__main__":
+    ip = get_ip_address()
+    print(ip)
+    ip_location = get_location(ip)
+    print(ip_location)
+    weather_desc = get_weather(ip_location)
+    print(weather_desc)
+    weather_info_greet = weather_greeting(weather_desc)
+    print(weather_info_greet)

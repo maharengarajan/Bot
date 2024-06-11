@@ -1,5 +1,5 @@
 import sys
-
+from src.bot.logger import logging
 
 def get_error_message_detail(error, error_detail: sys):
     _, _, exc_tb = error_detail.exc_info()

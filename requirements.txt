@@ -8,4 +8,4 @@ requests
 # development reqquirements
 isort
 
-# -e .
+-e .

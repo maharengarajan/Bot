@@ -1,15 +1,14 @@
 import re
 import sys
 from datetime import datetime, timezone
-
 from dotenv import load_dotenv
-
-from src.exception import CustomException
-from src.logger import logging
+from src.bot.exception import CustomException
+from src.bot.logger import logging
 
 
 def configure():
     load_dotenv()
+
 
 def get_current_utc_datetime():
     try:
@@ -45,7 +44,7 @@ def is_valid_contact_number(contact):
     
 
     
-
-# print(get_current_utc_datetime())
-# print(extract_utc_date_and_time(get_current_utc_datetime()))
-# print(type(extract_utc_date_and_time(get_current_utc_datetime())))
+if __name__=="__main__":
+    print(get_current_utc_datetime())
+    print(extract_utc_date_and_time(get_current_utc_datetime()))
+    print(type(extract_utc_date_and_time(get_current_utc_datetime())))
