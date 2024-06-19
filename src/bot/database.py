@@ -21,7 +21,7 @@ def create_database(host, user, password):
     try:
         mydb = conn.connect(host=host, user=user, password=password)
         cursor = mydb.cursor()
-        cursor.execute("CREATE DATABASE IF NOT EXISTS demodata_bot")
+        cursor.execute("CREATE DATABASE IF NOT EXISTS raja")
         logging.info("Database created successfully")
     except Exception as e:
         logging.error(f"An error occurred while creating database: {e}")
@@ -52,9 +52,13 @@ def create_tables(host, user, password, database):
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
+
+        # # Use the specified database
+        # cursor.execute(f"USE {database}")
+
         table_queries = [
             """
-            CREATE TABLE IF NOT EXISTS demodata_bot.new_client(
+            CREATE TABLE IF NOT EXISTS new_client(
                 ID INT AUTO_INCREMENT PRIMARY KEY,
                 DATE DATE,
                 TIME TIME,
@@ -71,7 +75,7 @@ def create_tables(host, user, password, database):
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS demodata_bot.existing_client(
+            CREATE TABLE IF NOT EXISTS existing_client(
                 ID INT AUTO_INCREMENT PRIMARY KEY,
                 DATE DATE,
                 TIME TIME,
@@ -87,7 +91,7 @@ def create_tables(host, user, password, database):
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS demodata_bot.job_seeker(
+            CREATE TABLE IF NOT EXISTS job_seeker(
                 ID INT AUTO_INCREMENT PRIMARY KEY,
                 DATE DATE,
                 TIME TIME,
@@ -119,8 +123,12 @@ def extract_new_client_details():
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
+
+        # Use the specified database
+        # cursor.execute(f"USE {database}")
+
         # execute sql query to retrive new_client details
-        query = "SELECT * FROM demodata_bot.new_client ORDER BY id DESC LIMIT 1"  # we can get the row with highest id value
+        query = "SELECT * FROM new_client ORDER BY id DESC LIMIT 1"  # we can get the row with highest id value
         cursor.execute(query)
         # Fetch the result
         result = cursor.fetchone()  # getting only one row
@@ -176,8 +184,12 @@ def extract_existing_client_details():
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
+
+        # Use the specified database
+        # cursor.execute(f"USE {database}")
+
         # execute sql query to retrive new_client details
-        query = "SELECT * FROM demodata_bot.existing_client ORDER BY id DESC LIMIT 1"  # we can get the row with highest id value
+        query = "SELECT * FROM existing_client ORDER BY id DESC LIMIT 1"  # we can get the row with highest id value
         cursor.execute(query)
         # Fetch the result
         result = cursor.fetchone()  # getting only one row
@@ -231,8 +243,12 @@ def extract_job_seeker_details():
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
+
+        # Use the specified database
+        # cursor.execute(f"USE {database}")
+
         # execute sql query to retrive new_client details
-        query = "SELECT * FROM demodata_bot.job_seeker ORDER BY id DESC LIMIT 1"  # we can get the row with highest id value
+        query = "SELECT * FROM job_seeker ORDER BY id DESC LIMIT 1"  # we can get the row with highest id value
         cursor.execute(query)
         # Fetch the result
         result = cursor.fetchone()  # getting only one row

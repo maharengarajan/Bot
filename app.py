@@ -155,7 +155,7 @@ def new_client_details():
 
         user_details = {"ip_address":ip_address, "name": name, "email": email, "contact": contact, "company":company}
 
-        query = "INSERT INTO demodata_bot.new_client (DATE, TIME, IP_ADDRESS, NAME, EMAIL_ID, CONTACT_NUMBER, COMPANY_NAME) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        query = "INSERT INTO new_client (DATE, TIME, IP_ADDRESS, NAME, EMAIL_ID, CONTACT_NUMBER, COMPANY_NAME) VALUES (%s, %s, %s, %s, %s, %s, %s)"
         values = (utc_date, utc_time, ip_address, name, email, contact, company, )
         cursor.execute(query, values)
         row_id = cursor.lastrowid  # Get the ID (primary key) of the inserted row
@@ -207,7 +207,7 @@ def industries():
 
         industry_str = ",".join(user_selected_industries)  # Convert lists to strings
 
-        query = "UPDATE demodata_bot.new_client SET INDUSTRY = %s WHERE ID = %s"
+        query = "UPDATE new_client SET INDUSTRY = %s WHERE ID = %s"
         values = (industry_str, row_id)
         cursor.execute(query, values)
         mydb.commit()
@@ -250,7 +250,7 @@ def verticals_new_client():
 
         vertical_str = ",".join(user_selected_verticals)
 
-        query = "UPDATE demodata_bot.new_client SET VERTICAL = %s WHERE ID = %s"
+        query = "UPDATE new_client SET VERTICAL = %s WHERE ID = %s"
         values = (vertical_str, row_id)
         cursor.execute(query, values)
         mydb.commit()
@@ -286,7 +286,7 @@ def requirement():
             else:
                 selected_requirement = requirements[user_selected_option]
 
-            query = "UPDATE demodata_bot.new_client SET REQUIREMENTS = %s WHERE ID = %s"
+            query = "UPDATE new_client SET REQUIREMENTS = %s WHERE ID = %s"
             values = (selected_requirement, row_id)
             cursor.execute(query, values)
             mydb.commit()
@@ -325,7 +325,7 @@ def known_source():
             else:
                 selected_known_source = known_sources[selected_option]
 
-            query = "UPDATE demodata_bot.new_client SET KNOWN_SOURCE = %s WHERE ID = %s"
+            query = "UPDATE new_client SET KNOWN_SOURCE = %s WHERE ID = %s"
             values = (selected_known_source, row_id)
             cursor.execute(query, values)
             mydb.commit()
@@ -359,7 +359,7 @@ def get_rating_new_client():
             user_select = str(credentials[selected_option])
             response = {'status': 'success', 'message':  user_select, 'code': 200}
 
-            query = "UPDATE demodata_bot.new_client SET RATING = %s WHERE ID = %s"
+            query = "UPDATE new_client SET RATING = %s WHERE ID = %s"
             values = (user_select, row_id)
             cursor.execute(query, values)
             mydb.commit()
@@ -427,7 +427,7 @@ def existing_client_details():
 
         user_details = {"ip_address":ip_address, "name": name, "email": email, "contact": contact, "company": company}
 
-        query = "INSERT INTO demodata_bot.existing_client (DATE, TIME, IP_ADDRESS, NAME, EMAIL_ID, CONTACT_NUMBER, COMPANY_NAME) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        query = "INSERT INTO existing_client (DATE, TIME, IP_ADDRESS, NAME, EMAIL_ID, CONTACT_NUMBER, COMPANY_NAME) VALUES (%s, %s, %s, %s, %s, %s, %s)"
         values = (utc_date, utc_time, ip_address, name, email, contact, company)
         cursor.execute(query, values)
         row_id = cursor.lastrowid  # Get the ID (primary key) of the inserted row
@@ -476,7 +476,7 @@ def verticals_exixting_client():
 
         vertical_str = ",".join(user_selected_verticals)
 
-        query = "UPDATE demodata_bot.existing_client SET VERTICAL = %s WHERE ID = %s"
+        query = "UPDATE existing_client SET VERTICAL = %s WHERE ID = %s"
         values = (vertical_str, row_id)
         cursor.execute(query, values)
         mydb.commit()
@@ -506,7 +506,7 @@ def issue_escalation():
         if selected_option in issue_escalation_options:
             selected_issue_escalation = issue_escalation_options[selected_option]
 
-            query = "UPDATE demodata_bot.existing_client SET ISSUE_ESCALATION = %s WHERE ID = %s"
+            query = "UPDATE existing_client SET ISSUE_ESCALATION = %s WHERE ID = %s"
             values = (selected_issue_escalation, row_id)
             cursor.execute(query, values)
             mydb.commit()
@@ -541,7 +541,7 @@ def issue_type():
             elif selected_issue_type == "Urgent":
                 response_message = "Thank you. We have saved your issue as urgent and will contact you immediately."
 
-            query = "UPDATE demodata_bot.existing_client SET ISSUE_TYPE = %s WHERE ID = %s"
+            query = "UPDATE existing_client SET ISSUE_TYPE = %s WHERE ID = %s"
             values = (selected_issue_type, row_id)
             logging.info(f"existing client issue type saved - {selected_issue_type}")
             cursor.execute(query, values)
@@ -581,7 +581,7 @@ def get_rating_existing_client():
             user_selected = str(credentials[selected_option])
             response = {'status': 'success', 'message':  user_selected, 'code': 200}
 
-            query = "UPDATE demodata_bot.existing_client SET RATING = %s WHERE ID = %s"
+            query = "UPDATE existing_client SET RATING = %s WHERE ID = %s"
             values = (user_selected, row_id)
             cursor.execute(query, values)
             mydb.commit()
@@ -648,7 +648,7 @@ def job_seeker_details():
 
         user_details = {"ip_address":ip_address, "name": name, "email": email, "contact": contact}
 
-        query = "INSERT INTO demodata_bot.job_seeker (DATE, TIME, IP_ADDRESS, NAME, EMAIL_ID, CONTACT_NUMBER) VALUES (%s, %s, %s, %s, %s, %s)"
+        query = "INSERT INTO job_seeker (DATE, TIME, IP_ADDRESS, NAME, EMAIL_ID, CONTACT_NUMBER) VALUES (%s, %s, %s, %s, %s, %s)"
         values = (utc_date, utc_time, ip_address, name, email, contact)
         cursor.execute(query, values)
         row_id = cursor.lastrowid
@@ -681,7 +681,7 @@ def category():
         if user_type in category_type:
             selected_category_type = category_type[user_type]
 
-            query = "UPDATE demodata_bot.job_seeker SET CATEGORY = %s WHERE ID = %s"
+            query = "UPDATE job_seeker SET CATEGORY = %s WHERE ID = %s"
             values = (selected_category_type, row_id)
             cursor.execute(query, values)
             mydb.commit()
@@ -725,7 +725,7 @@ def verticals_job_seeker():
 
         vertical_str = ",".join(user_selected_verticals)
 
-        query = "UPDATE demodata_bot.job_seeker SET VERTICAL = %s WHERE ID = %s"
+        query = "UPDATE job_seeker SET VERTICAL = %s WHERE ID = %s"
         values = (vertical_str, row_id)
         cursor.execute(query, values)
         mydb.commit()
@@ -751,7 +751,7 @@ def interview_available_check():
         if user_response in interview_avail_options:
             selected_interview_avail = interview_avail_options[user_response]
 
-            query = "UPDATE demodata_bot.job_seeker SET INTERVIEW_AVAILABLE = %s WHERE ID = %s"
+            query = "UPDATE job_seeker SET INTERVIEW_AVAILABLE = %s WHERE ID = %s"
             values = (selected_interview_avail, row_id)
             cursor.execute(query, values)
             mydb.commit()
@@ -780,7 +780,7 @@ def date_of_interview():
         row_id = data.get("row_id")
         interview_date = data.get("interview_date")
 
-        query = "UPDATE demodata_bot.job_seeker SET TIME_AVAILABLE = %s WHERE ID = %s"
+        query = "UPDATE job_seeker SET TIME_AVAILABLE = %s WHERE ID = %s"
         values = (interview_date, row_id)
         cursor.execute(query, values)
         mydb.commit()
@@ -807,7 +807,7 @@ def notice_period():
         if joining_date in notice_period_options:
             selected_notice_period_options = notice_period_options[joining_date]
 
-            query = "UPDATE demodata_bot.job_seeker SET NOTICE_PERIOD = %s WHERE ID = %s"
+            query = "UPDATE job_seeker SET NOTICE_PERIOD = %s WHERE ID = %s"
             values = (selected_notice_period_options, row_id)
             cursor.execute(query, values)
             mydb.commit()
@@ -847,7 +847,7 @@ def get_rating_job_seeker():
             user_selected = str(credentials[selected_option])
             response = {'status': 'success', 'message':  user_selected, 'code': 200}
 
-            query = "UPDATE demodata_bot.job_seeker SET RATING = %s WHERE ID = %s"
+            query = "UPDATE job_seeker SET RATING = %s WHERE ID = %s"
             values = (user_selected, row_id)
             cursor.execute(query, values)
             mydb.commit()
@@ -895,6 +895,6 @@ def get_rating_job_seeker():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0",debug=True,port=9600)
+    app.run(host="0.0.0.0",debug=True,port=8000)
     # app.run(host="0.0.0.0",debug=True,port=9600,ssl_context=context)
 

@@ -14,7 +14,7 @@ def get_ip_address():
     try:
         configure()
         ip = requests.get(os.getenv('ip_api_key')).text
-        logging.info("ip address collected successfully")
+        logging.info("ip address collected successfullyyyy")
         return ip
     except Exception as e:
         logging.error(f"An error occurred: {e}")
