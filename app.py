@@ -896,7 +896,5 @@ def get_rating_job_seeker():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0",debug=True,port=9600)
-    # app.run(host="0.0.0.0",debug=True,port=9600,ssl_context=context) 
-
-# testing
+    # app.run(host="0.0.0.0",debug=True,port=9600,ssl_context=context)
 
