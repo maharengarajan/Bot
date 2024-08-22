@@ -7,5 +7,6 @@ requests
 
 # development reqquirements
 isort
+ruff
 
 -e .
