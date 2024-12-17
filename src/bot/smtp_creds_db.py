@@ -59,7 +59,7 @@ def smtp_creds_to_db(host, user, password, database):
             "smtp.office365.com",
             587,
             "customappsmtp@datanetiix.com",
-            "Vom71445",
+            "Vm9tNzE0NDU=",
             "customappsmtp@datanetiix.com",
             "rengarajan@datanetiix.com,aiengineer@datanetiix.com",
             "rengarajan@datanetiix.com,aiengineer@datanetiix.com",

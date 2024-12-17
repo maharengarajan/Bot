@@ -8,7 +8,7 @@ import sys
 from src.bot.exception import CustomException
 from src.bot.logger import logging
 from src.bot.database import get_smtp_credentials
-from cryptography.fernet import Fernet
+import base64
 
 
 def configure():
@@ -19,8 +19,6 @@ host = os.getenv("database_host_name")
 user = os.getenv("database_user_name")
 password = os.getenv("database_user_password")
 database = os.getenv("database_name")
-encryption_key = os.getenv("encryption_key")
-
 
 
 def send_email(sender_email, receiver_emails, cc_email, subject, message, from_name="Chatbot_Datanetiix"):
@@ -46,12 +44,10 @@ def send_email(sender_email, receiver_emails, cc_email, subject, message, from_n
         smtp_credentials = get_smtp_credentials(host, user, password, database)
         logging.info(f"SMTP credentials fetched: {smtp_credentials}")
 
+        # Decrypt the password
+        decrypted_password = base64.b64decode(smtp_credentials['smtp_password']).decode()
 
-        cipher_suite = Fernet(encryption_key)
-
-        # Decrypt the credentials
-        decrypted_username = cipher_suite.decrypt(smtp_credentials['smtp_username']).decode()
-        decrypted_password = cipher_suite.decrypt(smtp_credentials['smtp_password']).decode()
+        logging.info(f"decrypted password:{decrypted_password}")
 
         # Debugging: Print receiver_emails and cc_email
         logging.info(f"Receiver Emails (Processed): {receiver_emails}")
@@ -63,7 +59,7 @@ def send_email(sender_email, receiver_emails, cc_email, subject, message, from_n
         # Create a secure connection with the SMTP server
         server = smtplib.SMTP(smtp_credentials['smtp_server'], smtp_credentials['smtp_port'])
         server.starttls(context=context)
-        server.login(decrypted_username, decrypted_password)
+        server.login(smtp_credentials['smtp_username'], decrypted_password)
 
         # Send the email
         all_recipients = receiver_emails + cc_email
@@ -82,10 +78,5 @@ def send_email(sender_email, receiver_emails, cc_email, subject, message, from_n
 
 if __name__=="__main__":
     smtp_credentials = get_smtp_credentials(host, user, password, database)
-    print(smtp_credentials['smtp_username'])
-    print(smtp_credentials['smtp_password'])
-    
-    
+
     send_email(smtp_credentials['sender_email'], smtp_credentials['prospect_receiver_emails'], smtp_credentials['cc_email'], smtp_credentials['prospect_email_subject'], message='test', from_name="Chatbot_Datanetiix")
-    # print(decrypted_username)
-    # print(decrypted_password)

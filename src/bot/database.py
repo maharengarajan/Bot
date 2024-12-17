@@ -18,6 +18,8 @@ database = os.getenv("database_name")
 
 
 def create_database(host, user, password):
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = conn.connect(host=host, user=user, password=password)
         cursor = mydb.cursor()
@@ -27,6 +29,13 @@ def create_database(host, user, password):
     except Exception as e:
         logging.error(f"An error occurred while creating database: {e}")
         raise CustomException(e, sys)
+    finally:
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
     
 
 def connect_to_mysql_database(host, user, password, database):
@@ -50,6 +59,8 @@ def create_cursor_object(mydb):
     
 
 def create_tables(host, user, password, database):
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -122,9 +133,18 @@ def create_tables(host, user, password, database):
     except Exception as e:
         logging.error(f"An error occurred: {e}")
         raise CustomException(e, sys)
+    finally:
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
 
 
 def extract_prospect_conversation():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -172,18 +192,23 @@ def extract_prospect_conversation():
 
             return prospect_details
         
-        # Close the cursor and connection
-        cursor.close()
-        logging.info("cursor connection closed")
-        mydb.close()
-        logging.info("database closed")
-
+        # Return None if no data is found
+        return None
     except Exception as e:
         logging.error(f"An error occurred: {e}")
         raise CustomException(e,sys)
+    finally:
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
     
 
 def extract_existing_client_conversation():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -231,19 +256,22 @@ def extract_existing_client_conversation():
             }
 
             return existing_client_details
-        
-        # Close the cursor and connection
-        cursor.close()
-        logging.info("cursor connection closed")
-        mydb.close()
-        logging.info("database closed")
-
+        return None
     except Exception as e:
         logging.error(f"An error occurred: {e}")
         raise CustomException(e,sys)
-    
+    finally:
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
+
 
 def extract_job_seeker_conversation():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -295,16 +323,17 @@ def extract_job_seeker_conversation():
             }
 
             return job_seeker_details
-        
-        # Close the cursor and connection
-        cursor.close()
-        logging.info("cursor connection closed")
-        mydb.close()
-        logging.info("database closed")
-
+        return None
     except Exception as e:
         logging.error(f"An error occurred: {e}")
         raise CustomException(e,sys)
+    finally:
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
 
 
 def alter_table(host, user, password, database):
@@ -326,6 +355,8 @@ def alter_table(host, user, password, database):
     
 
 def get_smtp_credentials(host, user, password, database):
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -353,8 +384,6 @@ def get_smtp_credentials(host, user, password, database):
 
         credentials = cursor.fetchone()
 
-        mydb.close()
-
         if credentials:
             return {
                 "smtp_server": credentials[0],
@@ -375,16 +404,23 @@ def get_smtp_credentials(host, user, password, database):
     except Exception as e:
         logging.error(f"An error occurred: {e}")
         raise CustomException(e, sys)
+    finally:
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
 
 
 
 if __name__ == "__main__":
    
     # create_database(host, user, password)
-    # create_tables(host, user, password, database)
+    create_tables(host, user, password, database)
 
-    smtp_credentials = get_smtp_credentials(host, user, password, database)
-    print(smtp_credentials)
-    print(smtp_credentials["job_seeker_receiver_emails"])
-    print(type(smtp_credentials["job_seeker_receiver_emails"]))
-    print(type(smtp_credentials["cc_email"]))
+    # smtp_credentials = get_smtp_credentials(host, user, password, database)
+    # print(smtp_credentials)
+    # print(smtp_credentials["job_seeker_receiver_emails"])
+    # print(type(smtp_credentials["job_seeker_receiver_emails"]))
+    # print(type(smtp_credentials["cc_email"]))

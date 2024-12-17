@@ -19,7 +19,7 @@ from src.bot.utils import (
     extract_utc_date_and_time,
     is_valid_name,
     is_valid_email,
-    is_valid_contact_number
+    # is_valid_contact_number
 )
 from src.bot.greet import (
     get_ip_address,
@@ -135,6 +135,8 @@ def client():
 ## this API responsible for collecting user details from prospects and save in DB
 @app.route("/chatbot/prospect", methods=["POST"])
 def prospect_details():
+    mydb = None  # Initialize variables to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -153,8 +155,8 @@ def prospect_details():
         if not is_valid_email(email):
             return jsonify({"message": "Please enter a valid email address.", "code": 400})
 
-        if not is_valid_contact_number(contact):
-            return jsonify({"message": "Please enter a valid contact number.", "code": 400})
+        # if not is_valid_contact_number(contact):
+        #     return jsonify({"message": "Please enter a valid contact number.", "code": 400})
 
         user_details = {"ip_address":ip, "name": name, "email": email, "contact": contact, "company":company}
 
@@ -174,11 +176,20 @@ def prospect_details():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    finally:
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
 
 
 ## this API is responsible for selecting industries for prospect
 @app.route("/chatbot/prospect/industries", methods=["POST"])
 def industries():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -222,10 +233,21 @@ def industries():
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
     
+    finally:
+        # Close the cursor and connection if they exist
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
+    
 
 # this API is responsible for selecting verticals
 @app.route("/chatbot/prospect/verticals", methods=["POST"])
 def verticals_prospect():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -262,10 +284,21 @@ def verticals_prospect():
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
     
+    finally:
+        # Close the cursor and connection if they exist
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
+    
 
 # this API is responsible for selecting requirements for AI & custom app
 @app.route("/chatbot/prospect/ai_requirement",methods=["POST"])
 def requirement():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -299,12 +332,22 @@ def requirement():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    finally:
+        # Close the cursor and connection if they exist
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
 
 
 
 # this API is responsible for selecting requirements for MD365
 @app.route("/chatbot/prospect/md_requirement",methods=["POST"])
 def md_requirement():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -339,11 +382,21 @@ def md_requirement():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    finally:
+        # Close the cursor and connection if they exist
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
     
 
 # this API is responsible for selecting requirements for salesforce
 @app.route("/chatbot/prospect/sf_requirement",methods=["POST"])
 def sf_requirement():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -378,12 +431,22 @@ def sf_requirement():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    finally:
+        # Close the cursor and connection if they exist
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
 
 
 
 # this API is responsible for selecting requirements for IT
 @app.route("/chatbot/prospect/it_requirement",methods=["POST"])
 def it_requirement():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -417,11 +480,21 @@ def it_requirement():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    finally:
+        # Close the cursor and connection if they exist
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
 
 
 # this API is responsible for selecting known sources
 @app.route("/chatbot/prospect/known_source",methods=["POST"])
 def known_source():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -457,11 +530,21 @@ def known_source():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    finally:
+        # Close the cursor and connection if they exist
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
     
 
 # this API responsible for getting new client rating about our chatbot
 @app.route('/chatbot/prospect/rate', methods=['POST'])
 def get_rating_new_client():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -491,11 +574,21 @@ def get_rating_new_client():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    finally:
+        # Close the cursor and connection if they exist
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
     
 
 # this api responsible for getting feedback from prospect
 @app.route('/chatbot/prospect/feedback', methods=['POST'])
 def save_feedback():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -542,11 +635,21 @@ def save_feedback():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    finally:
+        # Close the cursor and connection if they exist
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
 
 
 # this API responsible for collecting user details for existing client
 @app.route("/chatbot/existing_client", methods=["POST"])
 def existing_client_details():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -566,8 +669,8 @@ def existing_client_details():
         if not is_valid_email(email):
             return jsonify({"message": "Please enter a valid email address.", "code": 400})
 
-        if not is_valid_contact_number(contact):
-            return jsonify({"message": "Please enter a valid contact number.", "code": 400})
+        # if not is_valid_contact_number(contact):
+        #     return jsonify({"message": "Please enter a valid contact number.", "code": 400})
 
         user_details = {"ip_address":ip, "name": name, "email": email, "contact": contact, "company": company}
 
@@ -587,11 +690,21 @@ def existing_client_details():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    finally:
+        # Close the cursor and connection if they exist
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
 
 
 # this API is responsible for selecting verticals for existing client and save in DB
 @app.route("/chatbot/existing_client/verticals", methods=["POST"])
 def verticals_exixting_client():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -629,11 +742,21 @@ def verticals_exixting_client():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    finally:
+        # Close the cursor and connection if they exist
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
     
 
 # this API is responsible for selecting issue_escalation for existing client and save in DB
 @app.route("/chatbot/existing_client/issue_escalation", methods=["POST"])
 def issue_escalation():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -662,11 +785,21 @@ def issue_escalation():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    finally:
+        # Close the cursor and connection if they exist
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
     
 
 # this API is responsible for selecting issue_type for existing client and save in DB
 @app.route("/chatbot/existing_client/issue_type",methods=["POST"])
 def issue_type():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -702,11 +835,21 @@ def issue_type():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    finally:
+        # Close the cursor and connection if they exist
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
     
 
 # this APi is responsible for collecting issue as a text
 @app.route('/chatbot/existing_client/collect_issue', methods=['POST'])
 def collect_issue():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -722,11 +865,21 @@ def collect_issue():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    finally:
+        # Close the cursor and connection if they exist
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
 
 
 # this API responsible for getting existing client rating about our chatbot
 @app.route('/chatbot/existing_client/rate', methods=['POST'])
 def get_rating_existing_client():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -757,11 +910,21 @@ def get_rating_existing_client():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    finally:
+        # Close the cursor and connection if they exist
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
     
 
 # this api responsible for getting feedback from prospect
 @app.route('/chatbot/existing_client/feedback', methods=['POST'])
 def save_client_feedback():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -808,11 +971,21 @@ def save_client_feedback():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    finally:
+        # Close the cursor and connection if they exist
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
 
 
 # this API responsible for collecting user details from job seeker and save in DB
 @app.route("/chatbot/job_seeker", methods=["POST"])
 def job_seeker_details():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -832,8 +1005,8 @@ def job_seeker_details():
         if not is_valid_email(email):
             return jsonify({"message": "Please enter a valid email address.", "code": 400})
 
-        if not is_valid_contact_number(contact):
-            return jsonify({"message": "Please enter a valid contact number.", "code": 400})
+        # if not is_valid_contact_number(contact):
+        #     return jsonify({"message": "Please enter a valid contact number.", "code": 400})
 
         user_details = {"ip_address":ip, "name": name, "email": email, "contact": contact, "company": company}
 
@@ -853,11 +1026,21 @@ def job_seeker_details():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    finally:
+        # Close the cursor and connection if they exist
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
 
 
 # this API responsible for collecting user category of job seeker and save in DB
 @app.route("/chatbot/job_seeker/category", methods=["POST"])
 def category():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -881,11 +1064,21 @@ def category():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    finally:
+        # Close the cursor and connection if they exist
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
     
 
 # this API is responsible for selecting verticals for job seeker and save in DB
 @app.route("/chatbot/job_seeker/verticals", methods=["POST"])
 def verticals_job_seeker():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -923,11 +1116,21 @@ def verticals_job_seeker():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    finally:
+        # Close the cursor and connection if they exist
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
     
 
 # this API responsible for checking user availability for an interview
 @app.route("/chatbot/job_seeker_details/category/verticals/interview_avail", methods=["POST"])
 def interview_available_check():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -957,11 +1160,21 @@ def interview_available_check():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    finally:
+        # Close the cursor and connection if they exist
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
     
 
 # this API responsible for checking mode of an interview
 @app.route("/chatbot/job_seeker/interview_mode", methods=["POST"])
 def interview_mode():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -991,11 +1204,21 @@ def interview_mode():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    finally:
+        # Close the cursor and connection if they exist
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
 
 
 # this API responsible for checking date for an interview
 @app.route("/chatbot/job_seeker/date_of_interview",methods=["POST"])
 def date_of_interview():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -1014,11 +1237,21 @@ def date_of_interview():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    finally:
+        # Close the cursor and connection if they exist
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
     
 
 # this API responsible for checking notice period
 @app.route("/chatbot/job_seeker/notice_period",methods=["POST"])
 def notice_period():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -1048,11 +1281,21 @@ def notice_period():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    finally:
+        # Close the cursor and connection if they exist
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
     
 
 # this API is responsible for collecting linkedin url from the user
 @app.route("/chatbot/job_seeker/linkedin_url", methods=['POST'])
 def collect_linkedin_url():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -1075,11 +1318,21 @@ def collect_linkedin_url():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    finally:
+        # Close the cursor and connection if they exist
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
 
 
 # this API responsible for getting job seeker rating about our chatbot
 @app.route('/chatbot/job_seeker/rate', methods=['POST'])
 def get_rating_job_seeker():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -1109,11 +1362,21 @@ def get_rating_job_seeker():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    finally:
+        # Close the cursor and connection if they exist
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
     
 
 # this api responsible for getting feedback from prospect
 @app.route('/chatbot/job_seeker/jobseeker_feedback', methods=['POST'])
 def save_jobseeker_feedback():
+    mydb = None  # Initialize mydb and cursor to None
+    cursor = None
     try:
         mydb = connect_to_mysql_database(host, user, password, database)
         cursor = create_cursor_object(mydb)
@@ -1162,6 +1425,14 @@ def save_jobseeker_feedback():
     except Exception as e:
         logging.error(f"Error in processing request: {e}")
         return jsonify({"message": "Internal server error.", "status": "error", "error": str(e)}), 500
+    finally:
+        # Close the cursor and connection if they exist
+        if cursor:
+            cursor.close()
+            logging.info("Cursor closed")
+        if mydb:
+            mydb.close()
+            logging.info("Database connection closed")
 
 
 # context=  ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)

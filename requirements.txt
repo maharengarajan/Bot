@@ -4,6 +4,7 @@ Flask-Cors
 python-dotenv
 regex
 requests
+cryptography
 
 # development reqquirements
 isort
